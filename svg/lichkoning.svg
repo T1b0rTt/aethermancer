@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80" width="60" height="80">
+  <!-- Schild-Aura (Phase 1) -->
+  <circle cx="30" cy="40" r="32" fill="none" stroke="#00ccff" stroke-width="3" opacity="0.6"/>
+  <circle cx="30" cy="40" r="38" fill="none" stroke="#00ccff" stroke-width="2" opacity="0.3"/>
+  <!-- Robe -->
+  <path d="M8 36 Q4 80 2 80 L58 80 Q56 80 52 36 Z" fill="#1a0a2a"/>
+  <path d="M18 40 L16 80" stroke="#2a1a3a" stroke-width="1" fill="none" opacity="0.7"/>
+  <path d="M42 40 L44 80" stroke="#2a1a3a" stroke-width="1" fill="none" opacity="0.7"/>
+  <!-- Torso/Knochen durch Robe -->
+  <ellipse cx="30" cy="32" rx="14" ry="8" fill="#555544" opacity="0.5"/>
+  <line x1="16" y1="30" x2="12" y2="48" stroke="#ccccaa" stroke-width="3" stroke-linecap="round"/>
+  <line x1="44" y1="30" x2="48" y2="48" stroke="#ccccaa" stroke-width="3" stroke-linecap="round"/>
+  <!-- Krone -->
+  <path d="M10 14 L18 8 L24 14 L30 6 L36 14 L42 8 L50 14 L50 20 L10 20 Z" fill="#ffcc00"/>
+  <path d="M12 14 L18 9 L24 14" fill="none" stroke="#ffaa00" stroke-width="1"/>
+  <path d="M26 12 L30 5 L34 12" fill="none" stroke="#ffaa00" stroke-width="1"/>
+  <path d="M36 14 L42 9 L48 14" fill="none" stroke="#ffaa00" stroke-width="1"/>
+  <!-- Rubine in Krone -->
+  <circle cx="18" cy="8" r="2" fill="#cc0000"/>
+  <circle cx="30" cy="5" r="2.5" fill="#cc0000"/>
+  <circle cx="42" cy="8" r="2" fill="#cc0000"/>
+  <!-- Helm mit Visier -->
+  <ellipse cx="30" cy="20" rx="10" ry="12" fill="#d8d0cc"/>
+  <path d="M25 18 L35 18 L35 22 L25 22 Z" fill="#b8b0a0"/>
+  <!-- Augenlöcher -->
+  <ellipse cx="25" cy="20" rx="3" ry="2" fill="#1a0000"/>
+  <ellipse cx="35" cy="20" rx="3" ry="2" fill="#1a0000"/>
+  <!-- Glühende rote Augen -->
+  <circle cx="25" cy="20" r="1.5" fill="#ff2200"/>
+  <circle cx="35" cy="20" r="1.5" fill="#ff2200"/>
+  <circle cx="25" cy="19.5" r="0.5" fill="#ffaa00"/>
+  <circle cx="35" cy="19.5" r="0.5" fill="#ffaa00"/>
+  <!-- Nasenloch -->
+  <path d="M28 24 L30 26 L32 24" stroke="#c8c0b0" stroke-width="1" fill="none"/>
+  <!-- Schild im Vordergrund (Phase 1) -->
+  <circle cx="30" cy="40" r="28" fill="none" stroke="#00ccff" stroke-width="5" opacity="0.8" filter="url(#glow)"/>
+  <circle cx="30" cy="40" r="26" fill="none" stroke="#88eeff" stroke-width="2" opacity="0.6"/>
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>

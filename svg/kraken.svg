@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <!-- Hintergrund-Dunkelheit -->
+  <circle cx="40" cy="40" r="38" fill="#000000" opacity="0.3"/>
+  <!-- Hauptkörper -->
+  <ellipse cx="40" cy="42" rx="24" ry="20" fill="#1a0a1a"/>
+  <ellipse cx="40" cy="40" rx="22" ry="18" fill="#2a1a2a"/>
+  <!-- Tentakelarme - unten -->
+  <path d="M20 50 Q10 60 8 70 Q15 65 22 58" stroke="#2a1a2a" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M60 50 Q70 60 72 70 Q65 65 58 58" stroke="#2a1a2a" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M10 52 Q5 65 12 75 Q18 68 24 58" stroke="#3a2a3a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M70 52 Q75 65 68 75 Q62 68 56 58" stroke="#3a2a3a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- Tentakel - seitlich -->
+  <path d="M18 30 Q8 40 5 50" stroke="#4a3a4a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M62 30 Q72 40 75 50" stroke="#4a3a4a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- Tentakel-Saugnäpfe -->
+  <circle cx="15" cy="60" r="1.5" fill="#0a0a0a"/>
+  <circle cx="22" cy="62" r="1.5" fill="#0a0a0a"/>
+  <circle cx="65" cy="60" r="1.5" fill="#0a0a0a"/>
+  <circle cx="58" cy="62" r="1.5" fill="#0a0a0a"/>
+  <!-- Augen - zwei große -->
+  <ellipse cx="30" cy="35" rx="7" ry="9" fill="#000000"/>
+  <ellipse cx="50" cy="35" rx="7" ry="9" fill="#000000"/>
+  <!-- Augen-Visierung -->
+  <path d="M26 36 L34 36" stroke="#ff2200" stroke-width="1" opacity="0.5"/>
+  <path d="M46 36 L54 36" stroke="#ff2200" stroke-width="1" opacity="0.5"/>
+  <!-- Glühende Punkte -->
+  <circle cx="28" cy="35" r="2" fill="#ff4400" opacity="0.4"/>
+  <circle cx="52" cy="35" r="2" fill="#ff4400" opacity="0.4"/>
+  <!-- Mouth-Sack -->
+  <path d="M30 50 Q40 55 50 50" stroke="#000000" stroke-width="3" fill="none"/>
+  <ellipse cx="40" cy="52" rx="8" ry="5" fill="#0a0a0a"/>
+  <!-- Tentakel-Enden (Klauen) -->
+  <path d="M8 70 L5 78" stroke="#2a1a2a" stroke-width="3" fill="none"/>
+  <path d="M72 70 L75 78" stroke="#2a1a2a" stroke-width="3" fill="none"/>
+  <path d="M12 75 L10 80" stroke="#3a2a3a" stroke-width="2" fill="none"/>
+  <path d="M68 75 L70 80" stroke="#3a2a3a" stroke-width="2" fill="none"/>
+  <!-- Glühen um den Körper -->
+  <circle cx="40" cy="40" r="42" fill="none" stroke="#440000" stroke-width="2" opacity="0.3"/>
+</svg>

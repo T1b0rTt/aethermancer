@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="44" height="44">
+  <!-- Shadow -->
+  <ellipse cx="22" cy="40" rx="14" ry="4" fill="#001100" opacity="0.3"/>
+  <!-- Body blob -->
+  <path d="M6 26 Q4 14 10 8 Q16 2 22 2 Q28 2 34 8 Q40 14 38 26 Q36 38 22 40 Q8 38 6 26 Z" fill="#22cc22"/>
+  <!-- Highlight -->
+  <ellipse cx="16" cy="12" rx="6" ry="4" fill="#88ff88" opacity="0.5" transform="rotate(-20,16,12)"/>
+  <ellipse cx="14" cy="10" rx="3" ry="2" fill="#ccffcc" opacity="0.7" transform="rotate(-20,14,10)"/>
+  <!-- Shine droplet -->
+  <ellipse cx="28" cy="8" rx="2" ry="3" fill="#aaffaa" opacity="0.4" transform="rotate(15,28,8)"/>
+  <!-- Eyes -->
+  <ellipse cx="16" cy="22" rx="5" ry="5.5" fill="#003300"/>
+  <ellipse cx="28" cy="22" rx="5" ry="5.5" fill="#003300"/>
+  <circle cx="16" cy="22" r="3.5" fill="#005500"/>
+  <circle cx="28" cy="22" r="3.5" fill="#005500"/>
+  <circle cx="17" cy="20.5" r="1.5" fill="#ffffff" opacity="0.8"/>
+  <circle cx="29" cy="20.5" r="1.5" fill="#ffffff" opacity="0.8"/>
+  <!-- Cute mouth smile -->
+  <path d="M16 30 Q22 34 28 30" stroke="#005500" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Drip at bottom -->
+  <path d="M18 39 Q20 43 22 40" stroke="#1ab81a" stroke-width="2" fill="none"/>
+  <path d="M26 39 Q27 42 25 40" stroke="#1ab81a" stroke-width="1.5" fill="none"/>
+</svg>

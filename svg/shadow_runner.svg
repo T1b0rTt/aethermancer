@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
+  <!-- Kapuze -->
+  <path d="M8 12 Q24 4 40 12 L38 22 Q24 18 10 22 Z" fill="#1a1a2a"/>
+  <path d="M10 12 Q24 6 38 12" fill="none" stroke="#2a2a3a" stroke-width="2"/>
+  <!-- Körper -->
+  <path d="M12 22 L10 56 L38 56 L36 22 Z" fill="#1a1a2a"/>
+  <path d="M14 26 L12 56 M34 26 L36 56" stroke="#2a2a3a" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <!-- Gürtel -->
+  <rect x="12" y="38" width="24" height="4" fill="#332244" rx="1"/>
+  <!-- Klingen an Hüften -->
+  <path d="M12 40 L4 48" stroke="#886688" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M36 40 L44 48" stroke="#886688" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Klingen Glow -->
+  <path d="M14 40 L7 47" stroke="#cc88ff" stroke-width="1" opacity="0.5"/>
+  <path d="M34 40 L41 47" stroke="#cc88ff" stroke-width="1" opacity="0.5"/>
+  <!-- Schultern -->
+  <ellipse cx="14" cy="24" rx="6" ry="4" fill="#2a1a3a"/>
+  <ellipse cx="34" cy="24" rx="6" ry="4" fill="#2a1a3a"/>
+  <!-- Gesicht im Schatten -->
+  <ellipse cx="24" cy="14" rx="7" ry="9" fill="#0a0a15"/>
+  <!-- Augen (leuchtend violett) -->
+  <ellipse cx="20" cy="14" rx="2" ry="1.5" fill="#cc66ff"/>
+  <ellipse cx="28" cy="14" rx="2" ry="1.5" fill="#cc66ff"/>
+  <circle cx="20.5" cy="13.5" r="0.7" fill="#ffffff"/>
+  <circle cx="28.5" cy="13.5" r="0.7" fill="#ffffff"/>
+  <!-- Schatten-Effekt unter der Figur -->
+  <ellipse cx="24" cy="60" rx="14" ry="3" fill="#000000" opacity="0.3"/>
+</svg>

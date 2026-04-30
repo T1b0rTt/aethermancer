@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 112" width="96" height="112">
+  <!-- Dark aura -->
+  <circle cx="48" cy="56" r="44" fill="#1a0022" opacity="0.4"/>
+  <!-- Left wing -->
+  <path d="M30 50 Q10 20 2 4 Q16 24 22 38 Q26 46 32 50 Z" fill="#3a0044"/>
+  <path d="M30 50 Q14 22 2 4" stroke="#660066" stroke-width="1" fill="none" opacity="0.6"/>
+  <path d="M30 50 Q20 28 8 12" stroke="#660066" stroke-width="0.8" fill="none" opacity="0.4"/>
+  <!-- Right wing -->
+  <path d="M66 50 Q86 20 94 4 Q80 24 74 38 Q70 46 64 50 Z" fill="#3a0044"/>
+  <path d="M66 50 Q82 22 94 4" stroke="#660066" stroke-width="1" fill="none" opacity="0.6"/>
+  <path d="M66 50 Q76 28 88 12" stroke="#660066" stroke-width="0.8" fill="none" opacity="0.4"/>
+  <!-- Lower left wing claw -->
+  <path d="M22 38 Q6 52 4 64" stroke="#550055" stroke-width="3" fill="none"/>
+  <path d="M26 44 Q12 58 10 68" stroke="#550055" stroke-width="2" fill="none"/>
+  <!-- Lower right wing claw -->
+  <path d="M74 38 Q90 52 92 64" stroke="#550055" stroke-width="3" fill="none"/>
+  <path d="M70 44 Q84 58 86 68" stroke="#550055" stroke-width="2" fill="none"/>
+  <!-- Body -->
+  <ellipse cx="48" cy="72" rx="22" ry="26" fill="#2a0033"/>
+  <!-- Chest rune -->
+  <path d="M42 68 L48 62 L54 68 L48 74 Z" stroke="#ff00aa" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <!-- Tail -->
+  <path d="M48 95 Q36 106 32 112" stroke="#2a0033" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <polygon points="30,112 36,106 28,108" fill="#550033"/>
+  <!-- Arms -->
+  <rect x="4" y="62" width="26" height="10" fill="#2a0033" rx="5"/>
+  <rect x="66" y="62" width="26" height="10" fill="#2a0033" rx="5"/>
+  <!-- Claws left -->
+  <polygon points="4,64 0,60 4,70" fill="#440022"/>
+  <polygon points="4,66 -2,63 4,72" fill="#440022"/>
+  <!-- Claws right -->
+  <polygon points="92,64 96,60 92,70" fill="#440022"/>
+  <polygon points="92,66 98,63 92,72" fill="#440022"/>
+  <!-- Neck -->
+  <rect x="38" y="40" width="20" height="14" fill="#2a0033" rx="4"/>
+  <!-- Head -->
+  <ellipse cx="48" cy="30" rx="22" ry="20" fill="#330044"/>
+  <!-- Horns -->
+  <polygon points="30,18 24,0 34,16" fill="#1a0022"/>
+  <polygon points="66,18 72,0 62,16" fill="#1a0022"/>
+  <!-- Horn highlights -->
+  <line x1="27" y1="16" x2="25" y2="4" stroke="#660066" stroke-width="1" opacity="0.7"/>
+  <line x1="69" y1="16" x2="71" y2="4" stroke="#660066" stroke-width="1" opacity="0.7"/>
+  <!-- Eyes - glowing -->
+  <ellipse cx="38" cy="28" rx="7" ry="5" fill="#110011"/>
+  <ellipse cx="58" cy="28" rx="7" ry="5" fill="#110011"/>
+  <ellipse cx="38" cy="28" rx="5" ry="3.5" fill="#ff0066"/>
+  <ellipse cx="58" cy="28" rx="5" ry="3.5" fill="#ff0066"/>
+  <ellipse cx="38" cy="28" rx="2.5" ry="2" fill="#ff88aa"/>
+  <ellipse cx="58" cy="28" rx="2.5" ry="2" fill="#ff88aa"/>
+  <circle cx="39" cy="27" r="0.8" fill="white"/>
+  <circle cx="59" cy="27" r="0.8" fill="white"/>
+  <!-- Nose -->
+  <path d="M44 34 L48 38 L52 34" stroke="#550044" stroke-width="1.5" fill="none"/>
+  <!-- Mouth -->
+  <path d="M34 40 Q48 48 62 40" stroke="#110011" stroke-width="2.5" fill="#1a0022"/>
+  <!-- Teeth -->
+  <polygon points="36,41 34,48 38,41" fill="#ccccaa"/>
+  <polygon points="42,43 40,50 44,43" fill="#ccccaa"/>
+  <polygon points="48,44 46,51 50,44" fill="#ccccaa"/>
+  <polygon points="54,43 52,50 56,43" fill="#ccccaa"/>
+  <polygon points="60,41 58,48 62,41" fill="#ccccaa"/>
+  <!-- Crown of darkness -->
+  <path d="M28 18 Q32 10 36 16 Q40 8 44 16 Q48 6 52 16 Q56 8 60 16 Q64 10 68 18"
+        stroke="#6600aa" stroke-width="2" fill="none"/>
+</svg>

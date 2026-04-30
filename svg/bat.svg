@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 36" width="64" height="36">
+  <!-- Left wing -->
+  <path d="M32 18 Q20 8 4 4 Q12 14 14 20 Q20 22 32 20 Z" fill="#4a1a6a"/>
+  <path d="M32 18 Q18 10 4 4" stroke="#6a2a8a" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <!-- Right wing -->
+  <path d="M32 18 Q44 8 60 4 Q52 14 50 20 Q44 22 32 20 Z" fill="#4a1a6a"/>
+  <path d="M32 18 Q46 10 60 4" stroke="#6a2a8a" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <!-- Wing membranes lines -->
+  <path d="M14 20 Q22 12 32 18" stroke="#3a0a5a" stroke-width="0.5" fill="none"/>
+  <path d="M50 20 Q42 12 32 18" stroke="#3a0a5a" stroke-width="0.5" fill="none"/>
+  <!-- Wing tips -->
+  <polygon points="4,4 8,12 12,8" fill="#3a0a5a"/>
+  <polygon points="60,4 56,12 52,8" fill="#3a0a5a"/>
+  <!-- Body -->
+  <ellipse cx="32" cy="20" rx="7" ry="9" fill="#2a0a3a"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="13" rx="7" ry="6" fill="#3a1050"/>
+  <!-- Ears -->
+  <polygon points="27,10 24,4 29,9" fill="#3a1050"/>
+  <polygon points="37,10 40,4 35,9" fill="#3a1050"/>
+  <polygon points="27,10 25,6 28,9" fill="#cc66cc" opacity="0.6"/>
+  <polygon points="37,10 39,6 36,9" fill="#cc66cc" opacity="0.6"/>
+  <!-- Glowing red eyes -->
+  <circle cx="29" cy="13" r="2.5" fill="#ff0000" opacity="0.9"/>
+  <circle cx="35" cy="13" r="2.5" fill="#ff0000" opacity="0.9"/>
+  <circle cx="29" cy="13" r="1.2" fill="#ff6666"/>
+  <circle cx="35" cy="13" r="1.2" fill="#ff6666"/>
+  <circle cx="29.4" cy="12.5" r="0.5" fill="white"/>
+  <circle cx="35.4" cy="12.5" r="0.5" fill="white"/>
+  <!-- Fangs -->
+  <polygon points="30,18 29,22 31,18" fill="white"/>
+  <polygon points="34,18 33,22 35,18" fill="white"/>
+</svg>

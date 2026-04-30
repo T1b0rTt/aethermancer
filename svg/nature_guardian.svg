@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
+  <!-- Schatten -->
+  <ellipse cx="24" cy="60" rx="14" ry="3" fill="#000000" opacity="0.25"/>
+  <!-- Robe -->
+  <path d="M10 24 L6 58 L42 58 L38 24 Z" fill="#1a3a1a"/>
+  <path d="M12 28 L36 28" stroke="#2a4a2a" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <!-- Robe Details / Blätter -->
+  <ellipse cx="14" cy="38" rx="5" ry="8" fill="#224422" opacity="0.6"/>
+  <ellipse cx="34" cy="38" rx="5" ry="8" fill="#224422" opacity="0.6"/>
+  <ellipse cx="24" cy="44" rx="6" ry="7" fill="#1a3311" opacity="0.5"/>
+  <!-- Ranken-Stab -->
+  <line x1="40" y1="22" x2="38" y2="6" stroke="#332200" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Ranken um den Stab -->
+  <path d="M40 20 Q35 24 38 16" stroke="#225522" stroke-width="1.5" fill="none"/>
+  <path d="M40 18 Q34 22 38 14" stroke="#336633" stroke-width="1.5" fill="none"/>
+  <!-- Stab-Kristall (grün) -->
+  <circle cx="38" cy="5" r="5" fill="#008800" opacity="0.3"/>
+  <circle cx="38" cy="5" r="3" fill="#00cc00" opacity="0.5"/>
+  <circle cx="38" cy="5" r="1.5" fill="#88ff88"/>
+  <circle cx="37" cy="4" r="0.8" fill="#ffffff" opacity="0.8"/>
+  <!-- Kapuze -->
+  <path d="M8 18 Q8 6 24 4 Q40 6 40 18 Z" fill="#1a3a1a"/>
+  <path d="M10 18 Q24 12 38 18" stroke="#2a4a2a" stroke-width="2" fill="none"/>
+  <!-- Gesicht -->
+  <ellipse cx="24" cy="14" rx="8" ry="10" fill="#ddeecc"/>
+  <!-- Augen (grün) -->
+  <ellipse cx="20" cy="14" rx="3" ry="3.5" fill="#003300"/>
+  <ellipse cx="28" cy="14" rx="3" ry="3.5" fill="#003300"/>
+  <circle cx="20" cy="14" r="2" fill="#00aa00"/>
+  <circle cx="28" cy="14" r="2" fill="#00aa00"/>
+  <circle cx="20.8" cy="12.8" r="0.8" fill="#ffffff" opacity="0.8"/>
+  <circle cx="28.8" cy="12.8" r="0.8" fill="#ffffff" opacity="0.8"/>
+  <!-- Lächeln -->
+  <path d="M19 20 Q24 24 29 20" stroke="#003300" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- Blumenkranz auf Kapuze -->
+  <circle cx="15" cy="8" r="3" fill="#ff66aa" opacity="0.7"/>
+  <circle cx="14" cy="7" r="1.5" fill="#ff99cc"/>
+  <circle cx="33" cy="9" r="2.5" fill="#ffaa22" opacity="0.7"/>
+  <circle cx="32" cy="8" r="1.2" fill="#ffcc44"/>
+  <circle cx="24" cy="5" r="2" fill="#66ccff" opacity="0.6"/>
+</svg>

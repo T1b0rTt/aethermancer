@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Shadow -->
+  <ellipse cx="12" cy="22" rx="8" ry="2.5" fill="#001100" opacity="0.3"/>
+  <!-- Body -->
+  <path d="M3 14 Q2 7 7 4 Q12 1 17 4 Q22 7 21 14 Q20 21 12 22 Q4 21 3 14 Z" fill="#33dd33"/>
+  <!-- Highlight -->
+  <ellipse cx="9" cy="7" rx="3.5" ry="2.5" fill="#aaffaa" opacity="0.55" transform="rotate(-20,9,7)"/>
+  <ellipse cx="8" cy="6" rx="1.5" ry="1" fill="#eeffee" opacity="0.7" transform="rotate(-20,8,6)"/>
+  <!-- Eyes -->
+  <ellipse cx="9"  cy="13" rx="3" ry="3.2" fill="#003300"/>
+  <ellipse cx="15" cy="13" rx="3" ry="3.2" fill="#003300"/>
+  <circle cx="9"  cy="13" r="2"   fill="#006600"/>
+  <circle cx="15" cy="13" r="2"   fill="#006600"/>
+  <circle cx="9.8"  cy="11.8" r="0.9" fill="white" opacity="0.85"/>
+  <circle cx="15.8" cy="11.8" r="0.9" fill="white" opacity="0.85"/>
+  <!-- Mouth -->
+  <path d="M9 17.5 Q12 20 15 17.5" stroke="#005500" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

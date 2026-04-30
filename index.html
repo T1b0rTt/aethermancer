@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aethermancer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ─── Game Canvas ──────────────────────────────── -->
+<canvas id="gameCanvas"></canvas>
+
+<!-- ─── HUD ──────────────────────────────────────── -->
+<div id="hud">
+  <div id="hud-top">
+
+    <div class="hud-panel" id="hp-panel">
+      <div id="hp-label">LEBENSENERGIE</div>
+      <div id="hp-bar-bg"><div id="hp-bar" style="width:100%"></div></div>
+      <div id="hp-text">150 / 150</div>
+    </div>
+
+    <div class="hud-panel" id="wave-panel">
+      <div id="wave-number">Welle 1</div>
+      <div id="wave-sub">Töte alle Feinde!</div>
+    </div>
+
+    <div class="hud-panel" id="currency-panel">
+      <div id="currency-value">0</div>
+      <div id="currency-label">◆ KRISTALLE</div>
+    </div>
+
+    <div class="hud-panel" id="souls-panel">
+      <div id="souls-value">0</div>
+      <div id="souls-label">💎 SEELENKRISTALLE</div>
+    </div>
+
+  </div>
+
+  <!-- EXP Bar -->
+  <div id="exp-panel">
+    <div id="exp-label">EXP · LV <span id="exp-level">1</span></div>
+    <div id="exp-bar-bg"><div id="exp-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- Weapon Slots -->
+<div id="weapon-slots"></div>
+
+<!-- ─── Superpower Bar ────────────────────────────── -->
+<div id="super-panel">
+  <div id="super-label">✨ ARKANE NOVA</div>
+  <div id="super-bar-bg"><div id="super-bar" style="width:0%"></div></div>
+  <div id="super-key">Leertaste</div>
+</div>
+
+<!-- ─── Save Indicator ───────────────────────────── -->
+<div id="save-indicator"></div>
+
+<!-- ─── Wave Announcement ────────────────────────── -->
+<div id="wave-announce">
+  <h1>Welle 1</h1>
+  <p></p>
+</div>
+
+<!-- ─── Skill Tree Overlay ───────────────────────── -->
+<div id="skilltree-overlay">
+  <h2>⚔️ UPGRADE WÄHLEN</h2>
+  <div id="skilltree-subtitle">Wähle eine Verbesserung für die nächste Welle</div>
+  <div id="skilltree-currency">Kristalle: 0 ◆</div>
+  <div id="skill-cards"></div>
+  <div id="skilltree-footer">
+    <button id="skilltree-skip">Überspringen  [Enter]</button>
+    <button id="skilltree-save">💾 Speichern  [F5]</button>
+  </div>
+</div>
+
+<!-- ─── Menu Screen ───────────────────────────────── -->
+<div id="menu-screen">
+  <div id="menu-title">AETHERMANCER</div>
+  <div id="menu-subtitle">ÜBERLEBE DIE DUNKELHEIT</div>
+  <div id="menu-buttons">
+    <button id="start-btn">NEUES SPIEL</button>
+    <button id="continue-btn" style="display:none">FORTSETZEN</button>
+  </div>
+  <div class="menu-controls">
+    <span>Steuerung:</span><br>
+    Bewegen: Pfeiltasten / WASD &nbsp;|&nbsp; Schießen: Automatisch<br>
+    Superkraft: <span>Leertaste</span> &nbsp;|&nbsp; Pause: <span>ESC</span> &nbsp;|&nbsp; Speichern: <span>F5</span>
+  </div>
+</div>
+
+<!-- ─── Character Selection Screen ───────────────── -->
+<div id="charselect-overlay">
+  <h2>WÄHLE DEINEN CHARAKTER</h2>
+  <div id="charselect-souls">💎 Seelenkristalle: <strong id="cs-souls">0</strong></div>
+  <div id="char-cards"></div>
+  <button id="charselect-back">Zurück zum Menü</button>
+</div>
+
+<!-- ─── Weapon Selection Screen ───────────────── -->
+<div id="weaponselect-overlay">
+  <h2>⚔️ LEVEL UP!</h2>
+  <div id="weaponselect-subtitle">Wähle eine Waffe oder verbessere eine bestehende</div>
+  <div id="weapon-cards"></div>
+  <button id="weaponselect-skip">Überspringen</button>
+</div>
+
+<!-- ─── Game Over Screen ──────────────────────────── -->
+<div id="gameover-screen">
+  <h1>☠ GAME OVER</h1>
+  <div class="gameover-stats">
+    Erreichte Welle: <strong id="go-wave">0</strong><br>
+    Abgeholzte Feinde: <strong id="go-kills">0</strong><br>
+    Gesammelte Kristalle: <strong id="go-currency">0</strong> ◆<br>
+    Verdiente Seelenkristalle: <strong id="go-souls">0</strong> 💎
+  </div>
+  <button id="restart-btn">NOCHMAL SPIELEN</button>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
