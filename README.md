@@ -1,6 +1,6 @@
 # Aethermancer
 
-![Version](https://img.shields.io/badge/version-1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
 ![JS](https://img.shields.io/badge/vanilla-JS-yellow)
@@ -94,6 +94,15 @@ Oder einfach `index.html` im Browser öffnen.
 
 **Alle 10 Blöcke abgeschlossen!**
 
+## Updates (v1.1)
+
+```
+✅ Block 11 — Speicherplatz-System (3 Slots, JSON Export/Import, Drag&Drop, Löschen)
+⬜ Block 12 — Balancing (Seelenkristalle, EXP, Waffen, Feinde)
+⬜ Block 13 — Skilltree-Tiers (3 Stufen, mehr Auswahl)
+⬜ Block 14 — Weitere Verbesserungen
+```
+
 ## Projektstruktur
 
 ```
@@ -101,7 +110,7 @@ Oder einfach `index.html` im Browser öffnen.
 ├── index.html      # Einstiegspunkt + DOM-Overlays
 ├── style.css       # HUD, Menüs, Overlays
 ├── js/
-│   └── game.js     # Gesamte Spiellogik (~2600 Zeilen)
+│   └── game.js     # Gesamte Spiellogik (~3500 Zeilen)
 └── svg/
     ├── player.svg
     ├── shadow_runner.svg, warrior.svg, nature_guardian.svg
