@@ -98,7 +98,7 @@ Oder einfach `index.html` im Browser öffnen.
 
 ```
 ✅ Block 11 — Speicherplatz-System (3 Slots, JSON Export/Import, Drag&Drop, Löschen)
-⬜ Block 12 — Balancing (Seelenkristalle, EXP, Waffen, Feinde)
+✅ Block 12 — Balancing (Seelenkristalle, EXP, Waffen, Feinde)
 ⬜ Block 13 — Skilltree-Tiers (3 Stufen, mehr Auswahl)
 ⬜ Block 14 — Weitere Verbesserungen
 ```

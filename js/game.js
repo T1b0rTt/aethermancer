@@ -112,44 +112,44 @@ const WAVE_DATA = [
 const WEAPONS = [
   {
     id:'magic_shot', name:'Magieschuss', icon:'🔵', cat:'projectile',
-    desc:'Standard-Projektil.', maxLevel:5,
-    baseDmg:15, baseSpeed:520, baseCd:0.65,
-    scaling:'dmg', scalingPerLv:10, cdPerLv:-0.05,
+    desc:'Standard-Projektil.', maxLevel:6,
+    baseDmg:18, baseSpeed:520, baseCd:0.6,
+    scaling:'dmg', scalingPerLv:12, cdPerLv:-0.06,
   },
   {
     id:'orbit_orb', name:'Orbit-Kugeln', icon:'🟣', cat:'orbital',
-    desc:'2 Kugeln umkreisen den Spieler.', maxLevel:5,
-    baseDmg:20, baseSpeed:0, baseCd:0,
+    desc:'2 Kugeln umkreisen den Spieler.', maxLevel:6,
+    baseDmg:16, baseSpeed:0, baseCd:0,
     scaling:'count', scalingPerLv:1, cdPerLv:0,
-    orbs:2, orbRadius:70, orbSpeed:2.5,
+    orbs:2, orbRadius:75, orbSpeed:3.0,
   },
   {
     id:'lightning', name:'Blitzschlag', icon:'⚡', cat:'aoe',
-    desc:'Trifft zufälligen Feind im Umkreis.', maxLevel:5,
-    baseDmg:45, baseSpeed:0, baseCd:1.8,
-    scaling:'dmg', scalingPerLv:20, cdPerLv:-0.2,
+    desc:'Trifft zufälligen Feind im Umkreis.', maxLevel:6,
+    baseDmg:40, baseSpeed:0, baseCd:2.0,
+    scaling:'dmg', scalingPerLv:18, cdPerLv:-0.18,
     range:500,
   },
   {
     id:'frost_arrow', name:'Frostpfeil', icon:'❄️', cat:'projectile',
-    desc:'Projektil mit Slow-Effekt (40% für 1.5s).', maxLevel:5,
-    baseDmg:12, baseSpeed:440, baseCd:0.8,
-    scaling:'dmg', scalingPerLv:8, cdPerLv:-0.08,
-    slow:0.4, slowDuration:1.5,
+    desc:'Projektil mit Slow-Effekt (35% für 1.5s).', maxLevel:6,
+    baseDmg:14, baseSpeed:440, baseCd:0.7,
+    scaling:'dmg', scalingPerLv:10, cdPerLv:-0.07,
+    slow:0.35, slowDuration:1.5,
   },
   {
     id:'poison_gas', name:'Giftwolke', icon:'☠️', cat:'aoe',
-    desc:'Hinterlässt Giftwolke (3s, 15 DPS).', maxLevel:5,
-    baseDmg:15, baseSpeed:0, baseCd:2.2,
-    scaling:'dmg', scalingPerLv:10, cdPerLv:-0.2,
-    cloudDuration:3, cloudRadius:55,
+    desc:'Hinterlässt Giftwolke (3.5s, AoE-DoT).', maxLevel:6,
+    baseDmg:12, baseSpeed:0, baseCd:1.8,
+    scaling:'dmg', scalingPerLv:12, cdPerLv:-0.15,
+    cloudDuration:3.5, cloudRadius:60,
   },
   {
     id:'soul_shard', name:'Seelensplitter', icon:'💠', cat:'projectile',
-    desc:'Projektil bounced zum nächsten Feind (max 3).', maxLevel:5,
-    baseDmg:18, baseSpeed:380, baseCd:0.9,
-    scaling:'dmg', scalingPerLv:12, cdPerLv:-0.1,
-    bounces:3,
+    desc:'Projektil bounced zum nächsten Feind (max 4).', maxLevel:6,
+    baseDmg:22, baseSpeed:380, baseCd:0.85,
+    scaling:'dmg', scalingPerLv:14, cdPerLv:-0.08,
+    bounces:4,
   },
 ];
 
@@ -489,7 +489,7 @@ class Player {
     return gained; // number of level-ups
   }
 
-  _expToNext() { return 10 + this.level*8; }
+  _expToNext() { return 15 + this.level*12; }
 
   draw(ctx) {
     const wobble=Math.sin(this.walkAnim)*2;
@@ -1272,6 +1272,7 @@ class Game {
     SKILLS.forEach(s=>{ this.skills[s.id]=0; });
 
     this.meta={soulGems:0, metaLevels:{}, unlocked:['aether']};
+    this.runSoulGems=0; // earned during current run
 
     this.announceTimer=0;
     this.bgCanvas=null;
@@ -1438,6 +1439,7 @@ class Game {
     if (fromSave) {
       this.loadMeta();
     } else {
+      this.runSoulGems=0;
       this.playTime=0;
       this.currency=0;
       this.totalKills=0;
@@ -1521,9 +1523,10 @@ class Game {
     go.classList.add('show');
     document.getElementById('continue-endless-btn').style.display='';
     document.getElementById('menu-btn-gameover').style.display='';
-    const earned=Math.floor(this.totalKills*1.0 + this.wave*10 + this.player.maxHp/5);
-    this.saveMeta(earned);
-    document.getElementById('go-souls').textContent=earned;
+    // Add victory bonus on top of wave-earned gems
+    this.runSoulGems+=50;
+    this.saveMeta(this.runSoulGems);
+    document.getElementById('go-souls').textContent=this.runSoulGems;
     this._clearRunSave();
   }
 
@@ -1546,6 +1549,7 @@ class Game {
     this.challengeMods=[];
     this.bonusMultiplier=1.0;
     this.playTime=0;
+    this.runSoulGems=0;
     this.state='menu';
     this.pickups=[];
     this.enemies=[];
@@ -1628,10 +1632,8 @@ class Game {
     go.querySelector('#go-time').textContent=this._formatPlayTime();
     go.classList.add('show');
 
-    let earned=Math.floor(this.totalKills*0.5 + this.wave*5 + this.player.maxHp/10);
-    if (this.gameMode==='challenge') earned=Math.floor(earned*this.bonusMultiplier);
-    this.saveMeta(earned);
-    document.getElementById('go-souls').textContent=earned;
+    this.saveMeta(this.runSoulGems);
+    document.getElementById('go-souls').textContent=this.runSoulGems;
     this._clearRunSave();
   }
 
@@ -1889,6 +1891,16 @@ class Game {
 
   waveComplete() {
     this.waveActive=false;
+    // Award soul gems per wave (5 regular, 10 boss, +40 round bonus)
+    const isBoss=this.wave%10===0;
+    let gems=isBoss?10:5;
+    if (isBoss) gems+=40; // complete round bonus
+    this.runSoulGems+=gems;
+    this.showFloatText(this.player.x, this.player.y-50, `💎 +${gems}`, '#aa88ff');
+    if (this.gameMode==='challenge') {
+      const bonus=Math.floor(gems*(this.bonusMultiplier-1));
+      if (bonus>0) { this.runSoulGems+=bonus; this.showFloatText(this.player.x, this.player.y-70, `💎 Bonus +${bonus}`, '#ffaa66'); }
+    }
 
     if (this._challengeNoLevelup) {
       // No skill tree in challenge no_levelup mode, just go to next wave
@@ -1979,9 +1991,9 @@ class Game {
     go.querySelector('#go-currency').textContent=this.currency;
     go.querySelector('#go-time').textContent=this._formatPlayTime();
     go.classList.add('show');
-    const earned=Math.floor(this.totalKills*1.0 + 100*10 + this.player.maxHp/5);
-    this.saveMeta(earned);
-    document.getElementById('go-souls').textContent=earned;
+    this.runSoulGems+=100; // full clear bonus
+    this.saveMeta(this.runSoulGems);
+    document.getElementById('go-souls').textContent=this.runSoulGems;
     document.getElementById('continue-endless-btn').style.display='';
     document.getElementById('menu-btn-gameover').style.display='';
     this._clearRunSave();
