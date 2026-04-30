@@ -1,5 +1,10 @@
 # Aethermancer
 
+![Version](https://img.shields.io/badge/version-0.6-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
+![JS](https://img.shields.io/badge/vanilla-JS-yellow)
+
 **Vampire Survivors-style HTML5 Arena Survival Game.**
 
 Überlebe die Dunkelheit — kämpfe in einer endlosen Arena gegen Horden von Monstern, level auf, sammle Waffen und verbessere deine Fähigkeiten in 10 Runden mit je 10 Wellen.
