@@ -154,6 +154,24 @@ const WEAPONS = [
 ];
 
 // ═══════════════════════════════════════════════════
+//  META SKILLS (persistent progression)
+// ═══════════════════════════════════════════════════
+const META_SKILLS = [
+  { id:'meta_hp', name:'Lebenskraft', icon:'❤️', desc:'+15 Start-HP pro Stufe.', max:5, baseCost:50, costScale:30 },
+  { id:'meta_speed', name:'Geschwindigkeit', icon:'💨', desc:'+8% Speed pro Stufe.', max:5, baseCost:40, costScale:25 },
+  { id:'meta_dmg', name:'Kampfkraft', icon:'⚔️', desc:'+10% Schaden pro Stufe.', max:5, baseCost:50, costScale:30 },
+  { id:'meta_startgem', name:'Startkapital', icon:'◆', desc:'+15 Start-Kristalle pro Stufe.', max:4, baseCost:40, costScale:25 },
+  { id:'meta_regen', name:'Regeneration', icon:'🌿', desc:'+0.5 HP/s passiver Regen.', max:4, baseCost:60, costScale:35 },
+  { id:'meta_magnet', name:'Magnetismus', icon:'🧲', desc:'+25% Magnet-Radius pro Stufe.', max:4, baseCost:35, costScale:20 },
+  { id:'meta_offers', name:'Mehr Auswahl', icon:'📋', desc:'+1 Level-Up Angebot pro Stufe.', max:2, baseCost:80, costScale:50 },
+  { id:'meta_reroll', name:'Reroll', icon:'🎲', desc:'1× Reroll pro Welle.', max:1, baseCost:100, costScale:0 },
+  { id:'meta_weapslot', name:'Waffenslot', icon:'🔫', desc:'+1 Waffen-Slot.', max:1, baseCost:150, costScale:0 },
+  { id:'unlock_shadow', name:'Schattenläuferin', icon:'🌑', desc:'Schattenläuferin freischalten.', max:1, baseCost:500, costScale:0 },
+  { id:'unlock_warrior', name:'Eisenkriegerin', icon:'🛡️', desc:'Eisenkriegerin freischalten.', max:1, baseCost:800, costScale:0 },
+  { id:'unlock_nature', name:'Naturwächter', icon:'🌿', desc:'Naturwächter freischalten.', max:1, baseCost:600, costScale:0 },
+];
+
+// ═══════════════════════════════════════════════════
 //  PARTICLE
 // ═══════════════════════════════════════════════════
 class Particle {
@@ -408,7 +426,8 @@ class Player {
     if (existing) {
       existing.level=Math.min(existing.level+1, cfg.maxLevel);
     } else {
-      if (this.activeWeapons.length>=6) return; // max 6 weapons
+      const maxSlots=6+(window.game&&window.game.meta&&window.game.meta.metaLevels?window.game.meta.metaLevels['meta_weapslot']||0:0);
+      if (this.activeWeapons.length>=maxSlots) return;
       this.activeWeapons.push({id:weaponId, level:1, cdTimer:0});
     }
   }
@@ -1206,6 +1225,8 @@ class Game {
     document.getElementById('skilltree-save').addEventListener('click',()=>this.save());
     document.getElementById('charselect-back').addEventListener('click',()=>this.hideCharSelect());
     document.getElementById('weaponselect-skip').addEventListener('click',()=>this.hideWeaponSelect());
+    document.getElementById('upgrades-btn').addEventListener('click',()=>this.showMetaTree());
+    document.getElementById('meta-back').addEventListener('click',()=>this.hideMetaTree());
 
     // Continue button — only show if save exists
     const contBtn=document.getElementById('continue-btn');
@@ -1273,12 +1294,13 @@ class Game {
       this.totalKills=0;
       this.wave=0;
       SKILLS.forEach(s=>{ this.skills[s.id]=0; });
-      this.soulGems=this.loadSoulGems();
+      this.loadMeta();
     } else {
-      this.soulGems=this.loadSoulGems();
+      this.loadMeta();
     }
     this.player=new Player(WORLD/2, WORLD/2, this.selectedChar||'aether');
     this.applySkillsToPlayer();
+    if (!fromSave) this.applyMetaToPlayer();
     if (fromSave && this._savedHp) {
       this.player.hp=Math.min(this._savedHp, this.player.maxHp);
     }
@@ -1321,7 +1343,10 @@ class Game {
     go.querySelector('#go-kills').textContent=this.totalKills;
     go.querySelector('#go-currency').textContent=this.currency;
     go.classList.add('show');
-    this.saveSoulGems(); // Speichere Seelenkristalle beim Tod
+    // Calculate earned soul gems and save meta
+    const earned=Math.floor(this.totalKills*0.5 + this.wave*5 + this.player.maxHp/10);
+    this.saveMeta(earned);
+    document.getElementById('go-souls').textContent=earned;
   }
 
   // ── Wave Logic ────────────────────────────────
@@ -1523,14 +1548,14 @@ class Game {
     document.getElementById('skilltree-overlay').classList.remove('show');
     this.state='playing';
     this.autoSave();
-    this.saveSoulGems(); // Speichere Seelenkristalle
+    this.saveMeta(0); // Persist meta state (no new gems mid-run)
     this.beginWave(this.wave); // advance to next wave
   }
 
   // ── Character Selection ─────────────────────────
   showCharSelect() {
     this.state='charselect';
-    this.soulGems=this.loadSoulGems();
+    this.loadMeta();
     document.getElementById('menu-screen').classList.add('hide');
     const overlay=document.getElementById('charselect-overlay');
     document.getElementById('cs-souls').textContent=this.soulGems;
@@ -1583,19 +1608,8 @@ class Game {
         card.addEventListener('click', ()=>{
           if (this.soulGems>=c.cost) {
             this._unlockChar(c.id);
-            this.soulGems-=c.cost;
             this.selectedChar=c.id;
             this.renderCharCards();
-            // Save char unlock immediately
-            const data={};
-            try {
-              const raw=localStorage.getItem('aethermancer_meta');
-              if (raw) Object.assign(data, JSON.parse(raw));
-            } catch(e) {}
-            data.soulGems=this.soulGems;
-            data.unlocked=data.unlocked||['aether'];
-            data.unlocked.push(c.id);
-            localStorage.setItem('aethermancer_meta', JSON.stringify(data));
             setTimeout(()=>this.startGame(false), 300);
           }
         });
@@ -1605,25 +1619,96 @@ class Game {
   }
 
   _getUnlockedChars() {
-    try {
-      const raw=localStorage.getItem('aethermancer_meta');
-      if (raw) {
-        const data=JSON.parse(raw);
-        return data.unlocked||['aether'];
-      }
-    } catch(e) {}
-    return ['aether'];
+    if (!this.meta) this.loadMeta();
+    const unlocked=this.meta.unlocked||['aether'];
+    // Also check meta skill unlocks
+    const ml=this.meta.metaLevels||{};
+    if (ml['unlock_shadow']&&!unlocked.includes('shadow')) unlocked.push('shadow');
+    if (ml['unlock_warrior']&&!unlocked.includes('warrior')) unlocked.push('warrior');
+    if (ml['unlock_nature']&&!unlocked.includes('nature')) unlocked.push('nature');
+    return unlocked;
   }
 
   _unlockChar(charId) {
-    try {
-      const raw=localStorage.getItem('aethermancer_meta');
-      let data={};
-      if (raw) data=JSON.parse(raw);
-      data.unlocked=data.unlocked||['aether'];
-      if (!data.unlocked.includes(charId)) data.unlocked.push(charId);
-      localStorage.setItem('aethermancer_meta', JSON.stringify(data));
-    } catch(e) {}
+    const cfg=CHARACTERS.find(c=>c.id===charId);
+    if (!cfg) return;
+    this.loadMeta();
+    this.soulGems-=cfg.cost;
+    if (!this.meta.unlocked) this.meta.unlocked=['aether'];
+    if (!this.meta.unlocked.includes(charId)) this.meta.unlocked.push(charId);
+    this.meta.soulGems=this.soulGems;
+    this.saveMeta(0);
+  }
+
+  // ── Meta Upgrades Screen ────────────────────────
+  showMetaTree() {
+    this.state='metatree';
+    this.loadMeta();
+    document.getElementById('menu-screen').classList.add('hide');
+    const overlay=document.getElementById('meta-overlay');
+    document.getElementById('meta-souls').textContent=this.soulGems;
+    this.renderMetaCards();
+    overlay.classList.add('show');
+  }
+
+  hideMetaTree() {
+    document.getElementById('meta-overlay').classList.remove('show');
+    document.getElementById('menu-screen').classList.remove('hide');
+    this.state='menu';
+  }
+
+  renderMetaCards() {
+    const container=document.getElementById('meta-cards');
+    if (!container) return;
+    container.innerHTML='';
+    const ml=this.meta.metaLevels||{};
+
+    for (const s of META_SKILLS) {
+      const lv=ml[s.id]||0;
+      const isMaxed=lv>=s.max;
+      const cost=s.baseCost+lv*s.costScale;
+      const canAfford=this.soulGems>=cost;
+      const isUnlock=s.id.startsWith('unlock_');
+      const alreadyUnlocked=isUnlock&&this.meta.unlocked&&this.meta.unlocked.includes(s.id.replace('unlock_',''));
+
+      const card=document.createElement('div');
+      card.className='skill-card meta-card';
+      if (isMaxed||alreadyUnlocked) card.classList.add('maxed');
+      else if (!canAfford) card.classList.add('locked');
+
+      const cardLabel=alreadyUnlocked?'BEREITS FREI':
+        isMaxed?'MAX':
+        `💎 ${cost}`;
+
+      card.innerHTML=`
+        <div class="skill-icon">${s.icon}</div>
+        <div class="skill-name">${s.name}</div>
+        <div class="skill-desc">${s.desc}</div>
+        <div class="skill-level">Stufe: <span>${lv} / ${s.max}</span></div>
+        <div class="skill-cost">${cardLabel}</div>
+        ${isMaxed?'<div class="skill-maxed-badge">MAX</div>':''}
+      `;
+
+      if (!isMaxed&&!alreadyUnlocked&&canAfford) {
+        card.addEventListener('click', ()=>{
+          this.soulGems-=cost;
+          this.meta.metaLevels[s.id]=lv+1;
+          this.meta.soulGems=this.soulGems;
+          if (isUnlock) {
+            const charId=s.id.replace('unlock_','');
+            if (!this.meta.unlocked.includes(charId)) this.meta.unlocked.push(charId);
+          }
+          this.saveMeta(0);
+          this.renderMetaCards();
+          document.getElementById('meta-souls').textContent=this.soulGems;
+        });
+      }
+      container.appendChild(card);
+    }
+    // Make container scrollable if many cards
+    container.style.overflowY='auto';
+    container.style.maxHeight='60vh';
+    container.style.flexWrap='wrap';
   }
 
   // ── Weapon Selection ───────────────────────────
@@ -1654,7 +1739,8 @@ class Game {
     for (const w of WEAPONS) {
       const existing=p.activeWeapons.find(aw=>aw.id===w.id);
       if (existing && existing.level>=w.maxLevel) continue; // maxed
-      if (!existing && p.activeWeapons.length>=6) continue; // max slots, only upgrades
+      const maxSlots=6+(this.meta&&this.meta.metaLevels?this.meta.metaLevels['meta_weapslot']||0:0);
+      if (!existing && p.activeWeapons.length>=maxSlots) continue; // max slots, only upgrades
       pool.push(w);
     }
     // shuffle
@@ -1662,7 +1748,8 @@ class Game {
       const j=Math.floor(Math.random()*(i+1));
       [pool[i],pool[j]]=[pool[j],pool[i]];
     }
-    return pool.slice(0,3);
+    const extraOffers=(this.meta&&this.meta.metaLevels?this.meta.metaLevels['meta_offers']||0:0);
+    return pool.slice(0,3+extraOffers);
   }
 
   renderWeaponCards() {
@@ -1793,6 +1880,22 @@ class Game {
     p.superpowerMaxCd = cfg.spCd * (1 - lv('nova_cd')*0.20);
   }
 
+  applyMetaToPlayer() {
+    if (!this.player||!this.meta||!this.meta.metaLevels) return;
+    const p=this.player;
+    const ml=id=>this.meta.metaLevels[id]||0;
+    p.maxHp+=ml('meta_hp')*15;
+    p.hp=p.maxHp; // full heal on new game
+    p.baseSpeed*=(1+ml('meta_speed')*0.08);
+    p.dmg*=(1+ml('meta_dmg')*0.10);
+    p.regen+=ml('meta_regen')*0.5;
+    p.magnetRadius*=(1+ml('meta_magnet')*0.25);
+    this.currency+=ml('meta_startgem')*15;
+    // meta_offers affects _pickWeaponOffer (checked there)
+    // meta_reroll flag for skill tree
+    // meta_weapslot expands max weapon slots
+  }
+
   // ── Superpower ────────────────────────────────
   activateSuperpower() {
     if (this.state!=='playing') return;
@@ -1910,35 +2013,35 @@ class Game {
     } catch(e) { this._showSaveIndicator('⚠ Speichern fehlgeschlagen'); }
   }
 
-  saveSoulGems() {
-    // Speichert Seelenkristalle separat in Meta-Progression
+  saveMeta(earnedGems=0) {
     const key='aethermancer_meta';
-    let data={};
-    try {
-      const raw=localStorage.getItem(key);
-      if (raw) data=JSON.parse(raw);
-    } catch(e) {}
-    // Berechne neue Seelenkristalle: kills*0.5 + wave*5 + maxHp/10
-    const newSouls=Math.floor(this.totalKills*0.5 + this.wave*5 + this.player.maxHp/10);
-    data.soulGems=(data.soulGems||0) + newSouls;
+    let data=this._loadMetaRaw();
+    data.soulGems=(this.soulGems||0)+earnedGems;
+    if (this.meta) this.meta.soulGems=data.soulGems;
     data.lastWave=this.wave;
     data.lastKills=this.totalKills;
+    if (!data.metaLevels) { data.metaLevels={}; META_SKILLS.forEach(s=>{ data.metaLevels[s.id]=0; }); }
+    if (!data.unlocked) data.unlocked=['aether'];
     try {
       localStorage.setItem(key, JSON.stringify(data));
-      this._showSaveIndicator('💎 Seelenkristalle gespeichert!');
-    } catch(e) { this._showSaveIndicator('⚠ Meta-Save fehlgeschlagen'); }
+    } catch(e) {}
   }
 
-  loadSoulGems() {
+  _loadMetaRaw() {
     const key='aethermancer_meta';
     try {
       const raw=localStorage.getItem(key);
-      if (raw) {
-        const data=JSON.parse(raw);
-        return data.soulGems||0;
-      }
+      if (raw) return JSON.parse(raw);
     } catch(e) {}
-    return 0;
+    return {soulGems:0, unlocked:['aether'], metaLevels:{}};
+  }
+
+  loadMeta() {
+    const data=this._loadMetaRaw();
+    if (!data.metaLevels) { data.metaLevels={}; META_SKILLS.forEach(s=>{ data.metaLevels[s.id]=0; }); }
+    if (!data.unlocked) data.unlocked=['aether'];
+    this.meta=data;
+    this.soulGems=data.soulGems||0;
   }
 
   autoSave() {

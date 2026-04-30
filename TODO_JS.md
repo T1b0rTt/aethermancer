@@ -117,30 +117,30 @@ Alle geplanten Features und Erweiterungen für die laufende HTML5/JS-Version.
 
 ---
 
-## Block 6 — Persistenter Skilltree (Meta-Progression)
+## Block 6 — Persistenter Skilltree (Meta-Progression) ✅
 
-- [ ] Seelenkristalle: eigene Währung, getrennt von Run-Kristallen
-- [ ] Seelenkristall-Vergabe bei Run-Ende: `kills * 0.5 + wave * 5 + hp/10`
-- [ ] `MetaSkillTree`-Objekt mit eigenem localStorage-Key `aethermancer_meta`
-- [ ] 12 Meta-Skills implementieren (Datentabelle `META_SKILLS`)
-  - [ ] meta_hp (Start-HP Bonus)
-  - [ ] meta_speed (Start-Speed Bonus)
-  - [ ] meta_dmg (Start-Schaden Bonus)
-  - [ ] meta_startgem (Start-Kristalle)
-  - [ ] meta_regen (passiver Regen)
-  - [ ] meta_magnet (größerer Magnet-Radius)
-  - [ ] meta_offers (mehr Level-Up Angebote)
-  - [ ] meta_reroll (1 Reroll pro Welle)
-  - [ ] meta_weapslot (+1 Waffen-Slot)
-  - [ ] unlock_shadow (Schattenläuferin freischalten)
-  - [ ] unlock_warrior (Eisenkriegerin freischalten)
-  - [ ] unlock_nature (Naturwächter freischalten)
-- [ ] Meta-Skilltree-Screen im Hauptmenü ("Upgrades"-Button)
-  - [ ] Zeigt alle Meta-Skills mit Level und Kosten
-  - [ ] Seelenkristall-Anzeige oben
-- [ ] `applyMetaToPlayer()` beim Spielstart
-- [ ] Meta-Save bei jedem Run-Ende (Sieg + Tod)
-- [ ] Run-Save bei Tod NICHT überschreiben
+- [x] Seelenkristalle: eigene Währung, getrennt von Run-Kristallen
+- [x] Seelenkristall-Vergabe bei Run-Ende: `kills * 0.5 + wave * 5 + hp/10`
+- [x] `MetaSkillTree`-Objekt mit eigenem localStorage-Key `aethermancer_meta`
+- [x] 12 Meta-Skills implementieren (Datentabelle `META_SKILLS`)
+  - [x] meta_hp (Start-HP Bonus)
+  - [x] meta_speed (Start-Speed Bonus)
+  - [x] meta_dmg (Start-Schaden Bonus)
+  - [x] meta_startgem (Start-Kristalle)
+  - [x] meta_regen (passiver Regen)
+  - [x] meta_magnet (größerer Magnet-Radius)
+  - [x] meta_offers (mehr Level-Up Angebote)
+  - [x] meta_reroll (1 Reroll pro Welle)
+  - [x] meta_weapslot (+1 Waffen-Slot)
+  - [x] unlock_shadow (Schattenläuferin freischalten)
+  - [x] unlock_warrior (Eisenkriegerin freischalten)
+  - [x] unlock_nature (Naturwächter freischalten)
+- [x] Meta-Skilltree-Screen im Hauptmenü ("Upgrades"-Button)
+  - [x] Zeigt alle Meta-Skills mit Level und Kosten
+  - [x] Seelenkristall-Anzeige oben
+- [x] `applyMetaToPlayer()` beim Spielstart
+- [x] Meta-Save bei jedem Run-Ende (Sieg + Tod)
+- [x] Run-Save bei Tod NICHT überschreiben
 
 ---
 
@@ -230,7 +230,7 @@ Alle geplanten Features und Erweiterungen für die laufende HTML5/JS-Version.
 ✅ Block 3 — 10 Runden × 10 Wellen System
 ✅ Block 4 — Charakter-Auswahl (4 Charaktere)
 ✅ Block 5 — EXP-System & Waffen-Auswahl
-⬜ Block 6 — Persistenter Meta-Skilltree
+✅ Block 6 — Persistenter Meta-Skilltree
 ⬜ Block 7 — Spielmodi
 ⬜ Block 8 — Zweite Map
 ⬜ Block 9 — UI & HUD Erweiterungen
