@@ -1335,16 +1335,33 @@ class Game {
       this.renderSkillCards();
       document.getElementById('skilltree-reroll').style.display='none';
     });
+    document.getElementById('savemanager-close').addEventListener('click',()=>this.hideSaveManager());
+    document.getElementById('saves-btn').addEventListener('click',()=>this.showSaveManager());
 
-    // Continue button — only show if save exists
+    // Import drag & drop
+    const dropZone=document.getElementById('import-drop-zone');
+    const fileInput=document.getElementById('import-file-input');
+    dropZone.addEventListener('click',()=>fileInput.click());
+    fileInput.addEventListener('change',(e)=>{
+      if (e.target.files[0]) this._handleImportFile(e.target.files[0]);
+    });
+    dropZone.addEventListener('dragover',(e)=>{ e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop',(e)=>{
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) this._handleImportFile(e.dataTransfer.files[0]);
+    });
+
+    // Continue button — show if any save exists, use slot 0
     const contBtn=document.getElementById('continue-btn');
-    if (this.hasSave()) {
+    if (this.hasSave(0)) {
       contBtn.style.display='';
-      const raw=JSON.parse(localStorage.getItem('aethermancer_save'));
+      const raw=JSON.parse(localStorage.getItem(this._getSlotKey(0)));
       contBtn.textContent=`FORTSETZEN  (Welle ${raw.wave||1})`;
     }
     contBtn.addEventListener('click', ()=>{
-      if (this.load()) {
+      if (this.load(0)) {
         this._loadingFromSave=true;
         this.showCharSelect();
       }
@@ -1540,9 +1557,9 @@ class Game {
     document.getElementById('menu-screen').classList.remove('hide');
     // Update continue button
     const contBtn=document.getElementById('continue-btn');
-    if (this.hasSave()) {
+    if (this.hasSave(0)) {
       contBtn.style.display='';
-      const raw=JSON.parse(localStorage.getItem('aethermancer_save'));
+      const raw=JSON.parse(localStorage.getItem(this._getSlotKey(0)));
       contBtn.textContent=`FORTSETZEN  (Welle ${raw.wave||1})`;
     } else {
       contBtn.style.display='none';
@@ -1559,10 +1576,15 @@ class Game {
     this.beginWave(this.wave);
   }
 
-  _clearRunSave() {
-    localStorage.removeItem('aethermancer_save');
+  _clearRunSave(slot=0) {
+    localStorage.removeItem(this._getSlotKey(slot));
     const contBtn=document.getElementById('continue-btn');
-    contBtn.style.display='none';
+    if (contBtn && !this.hasAnySave()) contBtn.style.display='none';
+  }
+
+  hasAnySave() {
+    for (let i=0;i<3;i++) { if (this.hasSave(i)) return true; }
+    return false;
   }
 
   _formatPlayTime() {
@@ -2642,7 +2664,9 @@ class Game {
   }
 
   // ── Save / Load ───────────────────────────────
-  save() {
+  _getSlotKey(slot) { return `aethermancer_save_${slot}`; }
+
+  save(slot=0) {
     if (!this.player) return;
     if (this._challengePermadeath) return; // Permadeath modifier
     const p=this.player;
@@ -2667,7 +2691,7 @@ class Game {
       ts:Date.now(),
     };
     try {
-      localStorage.setItem('aethermancer_save', JSON.stringify(data));
+      localStorage.setItem(this._getSlotKey(slot), JSON.stringify(data));
       this._showSaveIndicator('💾 Gespeichert!');
     } catch(e) { this._showSaveIndicator('⚠ Speichern fehlgeschlagen'); }
   }
@@ -2728,16 +2752,160 @@ class Game {
     catch(e) { return 0; }
   }
 
+  // ── Save Manager ───────────────────────────────
+  showSaveManager() {
+    this.state='savemanager';
+    this.renderSaveSlots();
+    document.getElementById('savemanager-overlay').classList.add('show');
+  }
+
+  hideSaveManager() {
+    document.getElementById('savemanager-overlay').classList.remove('show');
+    this.state='menu';
+  }
+
+  renderSaveSlots() {
+    const container=document.getElementById('save-slots');
+    container.innerHTML='';
+    for (let slot=0; slot<3; slot++) {
+      const info=this._getSlotInfo(slot);
+      const div=document.createElement('div');
+      div.className='save-slot';
+      const hasData=!!info;
+      div.innerHTML=`
+        <div class="slot-num">SLOT ${slot+1}</div>
+        <div class="slot-info">
+          ${hasData ? `
+            <strong>${info.charName}</strong><br>
+            <span class="slot-wave">Welle ${info.wave} · Runde ${Math.floor((info.wave-1)/10)+1}</span><br>
+            <span class="slot-time">${info.playTimeStr} Spielzeit</span><br>
+            <span style="font-size:10px;color:#555">${info.dateStr}</span>
+          ` : '<span class="slot-empty">— Leer —</span>'}
+        </div>
+        <div class="slot-btns">
+          ${this.player ? `<button class="save-btn" data-slot="${slot}">💾 Speichern</button>` : ''}
+          ${hasData ? `
+            <button class="load-btn" data-slot="${slot}">📂 Laden</button>
+            <button class="export-btn" data-slot="${slot}">📤 Export</button>
+            <button class="delete-btn" data-slot="${slot}">🗑 Löschen</button>
+          ` : ''}
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    // Wire up buttons
+    document.querySelectorAll('.save-slot .save-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const slot=parseInt(btn.dataset.slot);
+        this.save(slot);
+        this.renderSaveSlots();
+      });
+    });
+    document.querySelectorAll('.save-slot .load-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const slot=parseInt(btn.dataset.slot);
+        document.getElementById('savemanager-overlay').classList.remove('show');
+        this.state='menu';
+        if (this.load(slot)) {
+          this._loadingFromSave=true;
+          this.showCharSelect();
+        }
+      });
+    });
+    document.querySelectorAll('.save-slot .export-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        this.exportSave(parseInt(btn.dataset.slot));
+      });
+    });
+    document.querySelectorAll('.save-slot .delete-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const slot=parseInt(btn.dataset.slot);
+        localStorage.removeItem(this._getSlotKey(slot));
+        this.renderSaveSlots();
+      });
+    });
+  }
+
+  _getSlotInfo(slot) {
+    try {
+      const raw=localStorage.getItem(this._getSlotKey(slot));
+      if (!raw) return null;
+      const d=JSON.parse(raw);
+      const charCfg=CHARACTERS.find(c=>c.id===d.charId);
+      const totalSec=Math.floor(d.playTime||0);
+      const pm=Math.floor(totalSec/60);
+      const ps=totalSec%60;
+      const dateStr=new Date(d.ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return {
+        charId:d.charId,
+        charName:charCfg?charCfg.name:'Unbekannt',
+        wave:d.wave||0,
+        playTime:d.playTime||0,
+        playTimeStr:`${pm}:${String(ps).padStart(2,'0')}`,
+        dateStr,
+        ts:d.ts||0,
+        version:d.v,
+      };
+    } catch(e) { return null; }
+  }
+
+  exportSave(slot) {
+    try {
+      const raw=localStorage.getItem(this._getSlotKey(slot));
+      if (!raw) { this._showImportStatus('Kein Spielstand in diesem Slot.', 'err'); return; }
+      const info=this._getSlotInfo(slot);
+      const blob=new Blob([raw],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=`aethermancer_save_slot${slot+1}_${info.charName.replace(/[^a-z0-9]/gi,'_')}_welle${info.wave}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) { this._showImportStatus('Export fehlgeschlagen.', 'err'); }
+  }
+
+  _handleImportFile(file) {
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try {
+        const data=JSON.parse(reader.result);
+        // Validate
+        if (!data.v||data.v<1||data.v>5) { this._showImportStatus('Ungültige Save-Version. Nur v1–v5 werden unterstützt.', 'err'); return; }
+        if (!data.charId||!data.wave) { this._showImportStatus('Beschädigte Datei — Pflichtfelder fehlen.', 'err'); return; }
+        // Find empty slot or use slot 2
+        let targetSlot=2;
+        for (let i=0;i<3;i++) {
+          if (!localStorage.getItem(this._getSlotKey(i))) { targetSlot=i; break; }
+        }
+        localStorage.setItem(this._getSlotKey(targetSlot), JSON.stringify(data));
+        const charCfg=CHARACTERS.find(c=>c.id===data.charId);
+        const charName=charCfg?charCfg.name:'Unbekannt';
+        this._showImportStatus(`✅ Importiert in Slot ${targetSlot+1}: ${charName}, Welle ${data.wave}`, 'ok');
+        this.renderSaveSlots();
+      } catch(e) { this._showImportStatus('Kein gültiges JSON.', 'err'); }
+    };
+    reader.readAsText(file);
+  }
+
+  _showImportStatus(msg, cls) {
+    const el=document.getElementById('import-status');
+    el.textContent=msg;
+    el.className=cls;
+    clearTimeout(this._importStatusTimer);
+    this._importStatusTimer=setTimeout(()=>{ el.textContent=''; el.className=''; }, 5000);
+  }
+
   autoSave() {
     if (this.player) this.save();
   }
 
-  hasSave() {
-    return !!localStorage.getItem('aethermancer_save');
+  hasSave(slot=0) {
+    return !!localStorage.getItem(this._getSlotKey(slot));
   }
 
-  load() {
-    const raw=localStorage.getItem('aethermancer_save');
+  load(slot=0) {
+    const raw=localStorage.getItem(this._getSlotKey(slot));
     if (!raw) return false;
     try {
       const data=JSON.parse(raw);

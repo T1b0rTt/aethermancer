@@ -84,6 +84,7 @@
     <button id="start-btn">NEUES SPIEL</button>
     <button id="continue-btn" style="display:none">FORTSETZEN</button>
     <button id="upgrades-btn">⬆ UPGRADES</button>
+    <button id="saves-btn">💾 SPIELSTÄNDE</button>
   </div>
   <div class="menu-controls">
     <span>Steuerung:</span><br>
@@ -168,6 +169,21 @@
 <!-- ─── Reroll indicator in skill tree ─────────── -->
 <div id="skilltree-reroll" style="display:none">
   <button id="skilltree-reroll-btn">🎲 REROLL</button>
+</div>
+
+<!-- ─── Save Manager Overlay ───────────────────── -->
+<div id="savemanager-overlay">
+  <h2>💾 SPIELSTÄNDE</h2>
+  <div id="savemanager-subtitle">Speichern, laden, exportieren und importieren</div>
+  <div id="save-slots"></div>
+  <div id="save-import-zone">
+    <div id="import-drop-zone">
+      <span>📂 JSON-Datei hier ablegen oder klicken zum Importieren</span>
+      <input type="file" id="import-file-input" accept=".json">
+    </div>
+    <div id="import-status"></div>
+  </div>
+  <button id="savemanager-close">Schließen</button>
 </div>
 
 <script src="js/game.js"></script>

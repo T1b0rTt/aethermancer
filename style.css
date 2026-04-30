@@ -933,3 +933,151 @@ body {
   0%   { transform: translateY(0) scale(1); opacity: 1; }
   100% { transform: translateY(-60px) scale(0.8); opacity: 0; }
 }
+
+/* ─── Save Manager ───────────────────────────────── */
+#saves-btn {
+  background: linear-gradient(135deg, #335566, #447788);
+  border: 1px solid rgba(100,200,255,0.3);
+  color: #aaccee;
+  font-size: 16px;
+  padding: 10px 36px;
+  border-radius: 50px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+#saves-btn:hover { transform: scale(1.05); border-color: rgba(100,200,255,0.6); color: #fff; }
+
+#savemanager-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0a1520 0%, #000005 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+  padding: 20px;
+}
+#savemanager-overlay.show { opacity: 1; pointer-events: all; }
+#savemanager-overlay h2 {
+  font-size: 30px;
+  color: #66aacc;
+  margin-bottom: 4px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px #336688;
+  flex-shrink: 0;
+}
+#savemanager-subtitle {
+  color: #667;
+  font-size: 13px;
+  margin-bottom: 22px;
+  flex-shrink: 0;
+}
+
+#save-slots {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.save-slot {
+  width: 210px;
+  background: linear-gradient(160deg, #081018, #121a28);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+.save-slot .slot-num {
+  font-size: 11px;
+  color: #556;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.save-slot .slot-info {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  min-height: 70px;
+}
+.save-slot .slot-info strong { color: #fff; font-size: 14px; }
+.save-slot .slot-info .slot-empty { color: #444; font-size: 13px; font-style: italic; }
+.save-slot .slot-info .slot-char { color: #88aacc; }
+.save-slot .slot-info .slot-wave { color: #ccaa44; }
+.save-slot .slot-info .slot-time { color: #668; }
+.save-slot .slot-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+.save-slot .slot-btns button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #999;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.15s;
+}
+.save-slot .slot-btns button:hover:not(:disabled) {
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+.save-slot .slot-btns button.delete-btn { color: #884444; border-color: rgba(255,100,100,0.2); }
+.save-slot .slot-btns button.delete-btn:hover { color: #ff6666; border-color: rgba(255,100,100,0.5); }
+.save-slot .slot-btns button.export-btn { color: #668844; border-color: rgba(150,200,100,0.2); }
+.save-slot .slot-btns button.export-btn:hover { color: #88cc66; border-color: rgba(150,200,100,0.5); }
+.save-slot .slot-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Import zone */
+#save-import-zone {
+  margin-top: 22px;
+  flex-shrink: 0;
+  text-align: center;
+}
+#import-drop-zone {
+  width: 320px;
+  padding: 28px;
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+#import-drop-zone:hover { border-color: rgba(100,200,255,0.4); background: rgba(100,200,255,0.03); }
+#import-drop-zone.dragover { border-color: rgba(100,200,255,0.7); background: rgba(100,200,255,0.08); }
+#import-drop-zone span { color: #556; font-size: 14px; }
+#import-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+#import-status {
+  font-size: 12px;
+  margin-top: 8px;
+  min-height: 18px;
+}
+#import-status.ok { color: #66cc88; }
+#import-status.err { color: #cc6666; }
+
+#savemanager-close {
+  margin-top: 22px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #888;
+  padding: 10px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+#savemanager-close:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
