@@ -1,6 +1,6 @@
 # Aethermancer
 
-![Version](https://img.shields.io/badge/version-0.6-blue)
+![Version](https://img.shields.io/badge/version-0.8-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
 ![JS](https://img.shields.io/badge/vanilla-JS-yellow)
