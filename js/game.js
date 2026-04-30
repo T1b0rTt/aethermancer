@@ -1293,12 +1293,12 @@ class Game {
      sprites.skeleton_mage, sprites.slime, sprites.slime_small, sprites.ghost,
      sprites.lichkoning, sprites.kraken, sprites.tentacle] =
       await Promise.all([
-        loadImg('svg/tree_stump.svg'),
-        loadImg('svg/mushroom.svg'),
         loadImg('svg/player.svg'),
         loadImg('svg/shadow_runner.svg'),
         loadImg('svg/warrior.svg'),
         loadImg('svg/nature_guardian.svg'),
+        loadImg('svg/tree_stump.svg'),
+        loadImg('svg/mushroom.svg'),
         loadImg('svg/zombie.svg'),
         loadImg('svg/bat.svg'),
         loadImg('svg/ogre.svg'),
@@ -1344,7 +1344,10 @@ class Game {
       contBtn.textContent=`FORTSETZEN  (Welle ${raw.wave||1})`;
     }
     contBtn.addEventListener('click', ()=>{
-      if (this.load()) this.showCharSelect();
+      if (this.load()) {
+        this._loadingFromSave=true;
+        this.showCharSelect();
+      }
     });
 
     this.selectedChar='aether'; // default character
@@ -1405,6 +1408,7 @@ class Game {
 
   // ── Game State ────────────────────────────────
   startGame(fromSave=false) {
+    this._loadingFromSave=false;
     document.getElementById('menu-screen').classList.add('hide');
     document.getElementById('charselect-overlay').classList.remove('show');
     document.getElementById('modeselect-overlay').classList.remove('show');
@@ -1606,6 +1610,7 @@ class Game {
     if (this.gameMode==='challenge') earned=Math.floor(earned*this.bonusMultiplier);
     this.saveMeta(earned);
     document.getElementById('go-souls').textContent=earned;
+    this._clearRunSave();
   }
 
   // ── Wave Logic ────────────────────────────────
@@ -2009,8 +2014,12 @@ class Game {
         card.addEventListener('click', ()=>{
           this.selectedChar=c.id;
           this.renderCharCards();
-          // Go to mode selection after character chosen
-          setTimeout(()=>this.showModeSelect(), 300);
+          if (this._loadingFromSave) {
+            // Continue mode — restore saved game directly
+            setTimeout(()=>this.startGame(true), 300);
+          } else {
+            setTimeout(()=>this.showModeSelect(), 300);
+          }
         });
       } else {
         card.addEventListener('click', ()=>{
@@ -2638,7 +2647,7 @@ class Game {
     if (this._challengePermadeath) return; // Permadeath modifier
     const p=this.player;
     const data={
-      v:4,
+      v:5,
       wave:this.wave,
       currency:this.currency,
       kills:this.totalKills,
@@ -2654,6 +2663,7 @@ class Game {
       challengeMods:this.challengeMods.map(m=>m.id),
       bonusMultiplier:this.bonusMultiplier,
       endlessWave:this.endlessWave,
+      playTime:this.playTime,
       ts:Date.now(),
     };
     try {
@@ -2680,6 +2690,8 @@ class Game {
     if (!data.unlocked||data.unlocked.length===0) data.unlocked=['aether'];
     data.lastWave=this.wave;
     data.lastKills=this.totalKills;
+    data.lastPlayTime=this.playTime;
+    data.v=1;
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch(e) {}
@@ -2729,8 +2741,8 @@ class Game {
     if (!raw) return false;
     try {
       const data=JSON.parse(raw);
-      // Accept v:1 through v:4 saves
-      if (data.v<1||data.v>4) return false;
+      // Accept v:1 through v:5 saves
+      if (data.v<1||data.v>5) return false;
       this.wave=data.wave||0;
       this.currency=data.currency||0;
       this.totalKills=data.kills||0;
@@ -2745,6 +2757,8 @@ class Game {
       this._savedTimeAttack=data.timeAttackTimer||900;
       this._savedChallengeMods=data.challengeMods||[];
       this._savedBonusMul=data.bonusMultiplier||1.0;
+      this.endlessWave=data.endlessWave||0;
+      this.playTime=data.playTime||0;
       // fill in any missing skills added after save
       SKILLS.forEach(s=>{ if (this.skills[s.id]==null) this.skills[s.id]=0; });
       return true;

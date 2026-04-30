@@ -1,6 +1,6 @@
 # Aethermancer
 
-![Version](https://img.shields.io/badge/version-0.9-blue)
+![Version](https://img.shields.io/badge/version-1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
 ![JS](https://img.shields.io/badge/vanilla-JS-yellow)
@@ -74,7 +74,8 @@ Oder einfach `index.html` im Browser öffnen.
 - HTML5 Canvas Rendering
 - SVG Sprites (18 handgefertigte Assets)
 - Delta-Time Game Loop
-- localStorage Persistenz (Run-Save + Meta-Progression)
+- localStorage Persistenz (Run-Save v:5 + Meta-Save + Highscore)
+- Speichern/Laden mit vollständiger State-Restore (Charakter, Modus, Map, Waffen, EXP)
 
 ## Fortschritt
 
@@ -88,8 +89,10 @@ Oder einfach `index.html` im Browser öffnen.
 ✅ Block 7 — Spielmodi (Endlos, Zeitangriff, Herausforderungen)
 ✅ Block 8 — Zweite Map (Verdorbener Wald)
 ✅ Block 9 — UI & HUD Erweiterungen
-⬜ Block 10 — Speicher-Erweiterung
+✅ Block 10 — Speicher-Erweiterung
 ```
+
+**Alle 10 Blöcke abgeschlossen!**
 
 ## Projektstruktur
 
