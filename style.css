@@ -754,6 +754,58 @@ body {
 }
 #challenge-reroll:hover { border-color: rgba(255,150,100,0.8); color: #ffbb88; }
 
+/* ─── Map Selection Overlay ────────────────────── */
+#mapselect-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0d0020 0%, #000005 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 57;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+  padding: 20px;
+}
+#mapselect-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+#mapselect-overlay h2 {
+  font-size: 30px;
+  color: #44cc88;
+  margin-bottom: 4px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px #226644;
+  flex-shrink: 0;
+}
+#mapselect-subtitle {
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 22px;
+  flex-shrink: 0;
+}
+#map-cards {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+#mapselect-back {
+  margin-top: 28px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #888;
+  padding: 10px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+#mapselect-back:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
 /* ─── Kill feed / floating text ─────────────────── */
 .float-text {
   position: fixed;

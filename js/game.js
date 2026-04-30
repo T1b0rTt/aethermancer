@@ -164,6 +164,24 @@ const GAME_MODES = [
 ];
 
 // ═══════════════════════════════════════════════════
+//  MAPS
+// ═══════════════════════════════════════════════════
+const MAPS = [
+  {
+    id:'arena', name:'Die Arena', icon:'🏟️',
+    desc:'Offenes Feld ohne Hindernisse.',
+    bgColor:'#080818', bgGrid:'#111128', vignette:false,
+    stumps:0, mushrooms:0,
+  },
+  {
+    id:'forest', name:'Verdorbener Wald', icon:'🌲',
+    desc:'Dichter Wald mit Baumstümpfen und Heilpilzen.',
+    bgColor:'#060e06', bgGrid:'#0a160a', vignette:true,
+    stumps:100, mushrooms:8,
+  },
+];
+
+// ═══════════════════════════════════════════════════
 //  CHALLENGE MODIFIERS
 // ═══════════════════════════════════════════════════
 const CHALLENGE_MODS = [
@@ -1170,6 +1188,53 @@ class TentacleArm {
 }
 
 // ═══════════════════════════════════════════════════
+//  MAP ENTITIES
+// ═══════════════════════════════════════════════════
+class TreeStump {
+  constructor(x,y) {
+    this.x=x; this.y=y; this.r=18;
+  }
+  draw(ctx) {
+    if (sprites.tree_stump) {
+      ctx.drawImage(sprites.tree_stump, this.x-20, this.y-20);
+    } else {
+      ctx.fillStyle='#3a2210';
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#2a1808'; ctx.lineWidth=2; ctx.stroke();
+    }
+  }
+  blocksPoint(px,py,pr=0) {
+    return dist(this.x,this.y,px,py) < this.r+pr;
+  }
+}
+
+class MushroomPickup {
+  constructor(x,y) {
+    this.x=x; this.y=y; this.r=12; this.collected=false;
+  }
+  draw(ctx) {
+    if (this.collected) return;
+    if (sprites.mushroom) {
+      ctx.drawImage(sprites.mushroom, this.x-12, this.y-14);
+    } else {
+      ctx.fillStyle='#cc4444';
+      ctx.beginPath(); ctx.arc(this.x,this.y-4,10,Math.PI,0); ctx.fill();
+      ctx.fillStyle='#ddccaa';
+      ctx.fillRect(this.x-2,this.y-4,4,10);
+    }
+  }
+  checkCollect(player) {
+    if (this.collected) return false;
+    if (dist(this.x,this.y,player.x,player.y) < this.r+player.r) {
+      this.collected=true;
+      player.heal(15);
+      return true;
+    }
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════
 //  MAIN GAME
 // ═══════════════════════════════════════════════════
 class Game {
@@ -1220,10 +1285,13 @@ class Game {
 
     // Load SVGs
     [sprites.player, sprites.shadow_runner, sprites.warrior, sprites.nature_guardian,
+     sprites.tree_stump, sprites.mushroom,
      sprites.zombie, sprites.bat, sprites.ogre, sprites.boss, sprites.gem,
      sprites.skeleton_mage, sprites.slime, sprites.slime_small, sprites.ghost,
      sprites.lichkoning, sprites.kraken, sprites.tentacle] =
       await Promise.all([
+        loadImg('svg/tree_stump.svg'),
+        loadImg('svg/mushroom.svg'),
         loadImg('svg/player.svg'),
         loadImg('svg/shadow_runner.svg'),
         loadImg('svg/warrior.svg'),
@@ -1249,7 +1317,8 @@ class Game {
     document.getElementById('skilltree-save').addEventListener('click',()=>this.save());
     document.getElementById('charselect-back').addEventListener('click',()=>this.hideCharSelect());
     document.getElementById('weaponselect-skip').addEventListener('click',()=>this.hideWeaponSelect());
-        document.getElementById('upgrades-btn').addEventListener('click',()=>this.showMetaTree());
+            document.getElementById('upgrades-btn').addEventListener('click',()=>this.showMetaTree());
+    document.getElementById('mapselect-back').addEventListener('click',()=>this.hideMapSelect());
     document.getElementById('modeselect-back').addEventListener('click',()=>this.hideModeSelect());
     document.getElementById('challenge-reroll').addEventListener('click',()=>{
       this._rolledChallengeMods=this._rollChallengeMods();
@@ -1270,6 +1339,9 @@ class Game {
 
     this.selectedChar='aether'; // default character
     this.selectedMode='standard';
+    this.selectedMap='arena';
+    this.treeStumps=[];
+    this.mushrooms=[];
     this.gameMode='standard';
     this.challengeMods=[];
     this.bonusMultiplier=1.0;
@@ -1286,13 +1358,14 @@ class Game {
   }
 
   buildPrerendered() {
-    // Pre-render background tile
+    // Pre-render background tile with map-specific colors
+    const cfg=MAPS.find(m=>m.id===this.selectedMap)||MAPS[0];
     const tc=document.createElement('canvas');
     tc.width=TILE; tc.height=TILE;
     const tx=tc.getContext('2d');
-    tx.fillStyle='#080818';
+    tx.fillStyle=cfg.bgColor;
     tx.fillRect(0,0,TILE,TILE);
-    tx.strokeStyle='#111128';
+    tx.strokeStyle=cfg.bgGrid;
     tx.lineWidth=0.5;
     tx.strokeRect(0,0,TILE,TILE);
     // Subtle texture
@@ -1351,7 +1424,10 @@ class Game {
     }
     this.player=new Player(WORLD/2, WORLD/2, this.selectedChar||'aether');
     this.applySkillsToPlayer();
-    if (!fromSave) this.applyMetaToPlayer();
+    if (!fromSave) {
+      this.applyMetaToPlayer();
+      this._generateMap();
+    }
     if (fromSave && this._savedHp) {
       this.player.hp=Math.min(this._savedHp, this.player.maxHp);
     }
@@ -1369,6 +1445,8 @@ class Game {
     // Restore mode-specific state from save
     if (fromSave) {
       this.gameMode=this._savedMode||'standard';
+      this.selectedMap=this._savedMap||'arena';
+      this._generateMap();
       this.timeAttackTimer=this._savedTimeAttack||900;
       this.bonusMultiplier=this._savedBonusMul||1.0;
       // Rebuild challenge mods from IDs
@@ -1903,7 +1981,7 @@ class Game {
         } else {
           document.getElementById('modeselect-overlay').classList.remove('show');
           this.selectedMode=m.id;
-          this.startGame(false);
+          this.showMapSelect();
         }
       });
       container.appendChild(card);
@@ -1960,8 +2038,93 @@ class Game {
       this.bonusMultiplier=1+totalBonus;
       document.getElementById('modeselect-overlay').classList.remove('show');
       this.selectedMode='challenge';
-      this.startGame(false);
+      this.showMapSelect();
     };
+  }
+
+  // ── Map Selection ───────────────────────────────
+  showMapSelect() {
+    this.state='mapselect';
+    const overlay=document.getElementById('mapselect-overlay');
+    if (!overlay) { this.startGame(false); return; } // fallback
+    this.renderMapCards();
+    overlay.classList.add('show');
+  }
+
+  hideMapSelect() {
+    document.getElementById('mapselect-overlay').classList.remove('show');
+    document.getElementById('modeselect-overlay').classList.add('show');
+    this.state='modeselect';
+  }
+
+  renderMapCards() {
+    const container=document.getElementById('map-cards');
+    if (!container) return;
+    container.innerHTML='';
+
+    for (const m of MAPS) {
+      const card=document.createElement('div');
+      card.className='mode-card';
+      card.innerHTML=`
+        <div class="mode-icon">${m.icon}</div>
+        <div class="mode-name">${m.name}</div>
+        <div class="mode-desc">${m.desc}</div>
+      `;
+      card.addEventListener('click', ()=>{
+        this.selectedMap=m.id;
+        document.getElementById('mapselect-overlay').classList.remove('show');
+        this.startGame(false);
+      });
+      container.appendChild(card);
+    }
+  }
+
+  _generateMap() {
+    const cfg=MAPS.find(m=>m.id===this.selectedMap)||MAPS[0];
+    this.treeStumps=[];
+    this.mushrooms=[];
+
+    if (cfg.stumps>0) {
+      const margin=60;
+      for (let i=0;i<cfg.stumps;i++) {
+        let x,y,valid=false;
+        let attempts=0;
+        while (!valid && attempts<200) {
+          x=rand(margin, WORLD-margin);
+          y=rand(margin, WORLD-margin);
+          // Min distance from player start (WORLD/2, WORLD/2)
+          if (dist(x,y,WORLD/2,WORLD/2)<200) { attempts++; continue; }
+          // Min distance from other stumps
+          let tooClose=false;
+          for (const s of this.treeStumps) {
+            if (dist(x,y,s.x,s.y)<50) { tooClose=true; break; }
+          }
+          if (!tooClose) valid=true;
+          attempts++;
+        }
+        if (valid) this.treeStumps.push(new TreeStump(x,y));
+      }
+    }
+
+    if (cfg.mushrooms>0) {
+      for (let i=0;i<cfg.mushrooms;i++) {
+        let x,y,valid=false;
+        let attempts=0;
+        while (!valid && attempts<100) {
+          x=rand(100, WORLD-100);
+          y=rand(100, WORLD-100);
+          if (dist(x,y,WORLD/2,WORLD/2)<180) { attempts++; continue; }
+          // Check not inside a stump
+          let blocked=false;
+          for (const s of this.treeStumps) {
+            if (dist(x,y,s.x,s.y)<s.r+20) { blocked=true; break; }
+          }
+          if (!blocked) valid=true;
+          attempts++;
+        }
+        if (valid) this.mushrooms.push(new MushroomPickup(x,y));
+      }
+    }
   }
 
   _rollChallengeMods() {
@@ -2280,6 +2443,21 @@ class Game {
     this.effects.push(new NovaEffect(p.x, p.y, radius));
 
     let killed=0;
+    // Tree stump collision for enemies
+    for (const stump of this.treeStumps) {
+      for (const e of this.enemies) {
+        if (stump.blocksPoint(e.x, e.y, e.r)) {
+          const [nx,ny]=norm(e.x-stump.x, e.y-stump.y);
+          e.x=stump.x+nx*(stump.r+e.r+0.5);
+          e.y=stump.y+ny*(stump.r+e.r+0.5);
+          e.x=clamp(e.x, 0, WORLD); e.y=clamp(e.y, 0, WORLD);
+          // Push enemy away from stump
+          e.pushX=e.pushX||0; e.pushY=e.pushY||0;
+          e.x+=nx*40*0.016; e.y+=ny*40*0.016;
+        }
+      }
+    }
+
     for (let i=this.enemies.length-1;i>=0;i--) {
       const e=this.enemies[i];
       if (dist(p.x,p.y,e.x,e.y)<radius) {
@@ -2364,6 +2542,7 @@ class Game {
       level:p.level,
       exp:p.exp,
       weapons:p.activeWeapons.map(w=>({id:w.id,level:w.level})),
+      selectedMap:this.selectedMap,
       gameMode:this.gameMode,
       timeAttackTimer:this.timeAttackTimer,
       challengeMods:this.challengeMods.map(m=>m.id),
@@ -2456,6 +2635,7 @@ class Game {
       this._savedExp=data.exp||0;
       this._savedWeapons=data.weapons||null;
       this._savedMode=data.gameMode||'standard';
+      this._savedMap=data.selectedMap||'arena';
       this._savedTimeAttack=data.timeAttackTimer||900;
       this._savedChallengeMods=data.challengeMods||[];
       this._savedBonusMul=data.bonusMultiplier||1.0;
@@ -2488,6 +2668,17 @@ class Game {
 
     p.update(dt, this.keys, this.enemies);
 
+    // Tree stump collision (player)
+    for (const stump of this.treeStumps) {
+      if (stump.blocksPoint(p.x, p.y, p.r)) {
+        const [nx,ny]=norm(p.x-stump.x, p.y-stump.y);
+        p.x=stump.x+nx*(stump.r+p.r+0.5);
+        p.y=stump.y+ny*(stump.r+p.r+0.5);
+        p.x=clamp(p.x, p.r, WORLD-p.r);
+        p.y=clamp(p.y, p.r, WORLD-p.r);
+      }
+    }
+
     // Time Attack: countdown timer
     if (this.gameMode==='timeattack') {
       this.timeAttackTimer-=dt;
@@ -2512,6 +2703,21 @@ class Game {
     }
 
     // Update enemies
+    // Tree stump collision for enemies
+    for (const stump of this.treeStumps) {
+      for (const e of this.enemies) {
+        if (stump.blocksPoint(e.x, e.y, e.r)) {
+          const [nx,ny]=norm(e.x-stump.x, e.y-stump.y);
+          e.x=stump.x+nx*(stump.r+e.r+0.5);
+          e.y=stump.y+ny*(stump.r+e.r+0.5);
+          e.x=clamp(e.x, 0, WORLD); e.y=clamp(e.y, 0, WORLD);
+          // Push enemy away from stump
+          e.pushX=e.pushX||0; e.pushY=e.pushY||0;
+          e.x+=nx*40*0.016; e.y+=ny*40*0.016;
+        }
+      }
+    }
+
     for (let i=this.enemies.length-1;i>=0;i--) {
       const e=this.enemies[i];
       e.update(dt, p);
@@ -2554,6 +2760,12 @@ class Game {
       const proj=this.enemyProjectiles[i];
       proj.update(dt);
       if (proj.dead()) { this.enemyProjectiles.splice(i,1); continue; }
+      // Tree stump collision
+      let blocked=false;
+      for (const stump of this.treeStumps) {
+        if (stump.blocksPoint(proj.x, proj.y, 3)) { blocked=true; break; }
+      }
+      if (blocked) { this.enemyProjectiles.splice(i,1); continue; }
       if (proj.hitsPlayer(p)) {
         p.takeDamage(proj.dmg);
         if (p.dead()) { this.gameOver(); return; }
@@ -2845,6 +3057,10 @@ class Game {
         ctx.globalAlpha=1;
       }
     }
+    // Tree stumps
+    for (const stump of this.treeStumps) stump.draw(ctx);
+    // Mushrooms
+    for (const mushroom of this.mushrooms) mushroom.draw(ctx);
     // Nature Vines
     if (this._natureVines) {
       for (const vine of this._natureVines) {
@@ -2931,7 +3147,22 @@ class Game {
 
     ctx.restore();
 
+    // Fog vignette for forest map
+    if (this.selectedMap==='forest' && this.state!=='menu') {
+      this.drawFogVignette(ctx);
+    }
+
     if (this.state==='paused') this.drawPause(ctx);
+  }
+
+  drawFogVignette(ctx) {
+    const w=this.canvas.width, h=this.canvas.height;
+    const grd=ctx.createRadialGradient(w/2, h/2, w*0.35, w/2, h/2, w*0.7);
+    grd.addColorStop(0, 'rgba(0,0,0,0)');
+    grd.addColorStop(0.5, 'rgba(0,8,0,0.15)');
+    grd.addColorStop(1, 'rgba(0,15,0,0.55)');
+    ctx.fillStyle=grd;
+    ctx.fillRect(0, 0, w, h);
   }
 
   drawBackground(ctx) {

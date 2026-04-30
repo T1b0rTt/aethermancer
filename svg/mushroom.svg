@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" width="24" height="28">
+  <!-- Shadow -->
+  <ellipse cx="12" cy="26" rx="6" ry="1.5" fill="#000000" opacity="0.2"/>
+  <!-- Stem -->
+  <path d="M9 24 L9 16 Q9 14 12 13 Q15 14 15 16 L15 24 Z" fill="#ddccaa"/>
+  <!-- Cap -->
+  <ellipse cx="12" cy="13" rx="11" ry="8" fill="#cc4444"/>
+  <!-- Cap top highlight -->
+  <ellipse cx="12" cy="11" rx="8" ry="4" fill="#dd5544" opacity="0.6"/>
+  <!-- White spots -->
+  <circle cx="8" cy="11" r="2" fill="#ffffdd" opacity="0.8"/>
+  <circle cx="15" cy="9" r="1.5" fill="#ffffdd" opacity="0.7"/>
+  <circle cx="10" cy="15" r="1.2" fill="#ffffdd" opacity="0.6"/>
+  <circle cx="17" cy="14" r="1" fill="#ffffdd" opacity="0.5"/>
+  <!-- Glow effect -->
+  <circle cx="12" cy="12" r="14" fill="#ffcccc" opacity="0.1"/>
+  <!-- Gills under cap -->
+  <path d="M4 15 Q12 18 20 15" stroke="#aa3333" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <path d="M5 17 Q12 19 19 17" stroke="#aa3333" stroke-width="0.6" fill="none" opacity="0.4"/>
+</svg>
