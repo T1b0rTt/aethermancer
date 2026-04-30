@@ -806,6 +806,120 @@ body {
 }
 #mapselect-back:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
+/* ─── Boss HP Bar ───────────────────────────────── */
+#boss-hp-panel {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,50,50,0.4);
+  border-radius: 10px;
+  padding: 8px 18px;
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+  min-width: 280px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#boss-hp-panel.show { opacity: 1; }
+#boss-name {
+  font-size: 12px;
+  color: #ff6644;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+#boss-hp-bar-bg {
+  width: 260px;
+  height: 14px;
+  background: #1a0000;
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+}
+#boss-hp-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, #cc2222, #ff4444);
+  border-radius: 7px;
+  transition: width 0.1s;
+  z-index: 2;
+}
+#boss-shield-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, #2255cc, #4488ff);
+  border-radius: 7px;
+  transition: width 0.1s;
+  z-index: 3;
+  border-right: 2px solid rgba(255,255,255,0.4);
+}
+#boss-hp-text {
+  font-size: 10px;
+  color: #ff8888;
+  margin-top: 3px;
+}
+
+/* ─── Gameover Buttons ──────────────────────────── */
+#gameover-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+#menu-btn-gameover {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #888;
+  padding: 10px 32px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 15px;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+}
+#menu-btn-gameover:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+#continue-endless-btn {
+  background: linear-gradient(135deg, #006644, #00aa66);
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 12px 40px;
+  border-radius: 50px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(0,200,100,0.3);
+}
+#continue-endless-btn:hover { transform: scale(1.05); }
+
+/* ─── Skilltree Reroll ──────────────────────────── */
+#skilltree-reroll {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 35;
+}
+#skilltree-reroll-btn {
+  background: linear-gradient(135deg, #553388, #7744aa);
+  border: 1px solid rgba(180,120,255,0.4);
+  color: #ccbbff;
+  padding: 8px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+#skilltree-reroll-btn:hover {
+  border-color: rgba(180,120,255,0.8);
+  box-shadow: 0 0 16px rgba(150,80,255,0.3);
+  color: #fff;
+}
+
 /* ─── Kill feed / floating text ─────────────────── */
 .float-text {
   position: fixed;

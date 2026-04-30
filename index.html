@@ -138,16 +138,36 @@
   <button id="meta-back">Zurück zum Menü</button>
 </div>
 
+<!-- ─── Boss HP Bar ────────────────────────────── -->
+<div id="boss-hp-panel">
+  <div id="boss-name">BOSS</div>
+  <div id="boss-hp-bar-bg">
+    <div id="boss-hp-bar"></div>
+    <div id="boss-shield-bar"></div>
+  </div>
+  <div id="boss-hp-text"></div>
+</div>
+
 <!-- ─── Game Over Screen ──────────────────────────── -->
 <div id="gameover-screen">
   <h1>☠ GAME OVER</h1>
   <div class="gameover-stats">
     Erreichte Welle: <strong id="go-wave">0</strong><br>
     Abgeholzte Feinde: <strong id="go-kills">0</strong><br>
+    Spielzeit: <strong id="go-time">0:00</strong><br>
     Gesammelte Kristalle: <strong id="go-currency">0</strong> ◆<br>
     Verdiente Seelenkristalle: <strong id="go-souls">0</strong> 💎
   </div>
-  <button id="restart-btn">NOCHMAL SPIELEN</button>
+  <div id="gameover-buttons">
+    <button id="restart-btn">NOCHMAL SPIELEN</button>
+    <button id="continue-endless-btn" style="display:none">WEITERSPIELEN (Endlos)</button>
+    <button id="menu-btn-gameover">HAUPTMENÜ</button>
+  </div>
+</div>
+
+<!-- ─── Reroll indicator in skill tree ─────────── -->
+<div id="skilltree-reroll" style="display:none">
+  <button id="skilltree-reroll-btn">🎲 REROLL</button>
 </div>
 
 <script src="js/game.js"></script>

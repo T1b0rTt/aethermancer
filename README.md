@@ -1,6 +1,6 @@
 # Aethermancer
 
-![Version](https://img.shields.io/badge/version-0.8-blue)
+![Version](https://img.shields.io/badge/version-0.9-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
 ![JS](https://img.shields.io/badge/vanilla-JS-yellow)
@@ -38,26 +38,41 @@ Oder einfach `index.html` im Browser öffnen.
 
 - **9 Feindtypen + 3 Bosse**
   - Zombies, Fledermäuse, Oger, Skelettmagier, Schleimklopse, Schattengeister
-  - Lichkönig (Teleport + Beschwörung), Chaoskraken (Tentakel + Spin), Schattenboss
+  - Lichkönig (Teleport + Beschwörung + Schild), Chaoskraken (Tentakel + Spin), Schattenboss
 
 - **10 Runden × 10 Wellen** mit Boss-Rotation und Schwierigkeits-Skalierung
+  - Sieg-Screen nach Welle 100 mit "Weiterspielen (Endlos)"-Option
+
+- **3 Spielmodi**
+  - Endlosmodus (dynamische Spawns, Highscore)
+  - Zeitangriff (15 Min Countdown, kontinuierlicher Spawn)
+  - Herausforderung (8 zufällige Modifikatoren mit Bonus-Multiplikator)
+
+- **2 Maps**
+  - Die Arena (offenes Feld)
+  - Verdorbener Wald (Baumstümpfe, Heilpilze, Nebel-Vignette)
 
 - **6 Waffen** mit Level-Up-System
   - 🔵 Magieschuss · 🟣 Orbit-Kugeln · ⚡ Blitzschlag
   - ❄️ Frostpfeil (Slow) · ☠️ Giftwolke (AoE) · 💠 Seelensplitter (Bounce)
 
-- **12 Run-Upgrades** (Skilltree) pro Welle
+- **12 Run-Upgrades** (Skilltree) pro Welle mit Reroll-Funktion
 
 - **12 Meta-Upgrades** (persistent) mit Seelenkristall-Währung
   - HP, Speed, Damage, Regeneration, Startgems, Magnet-Radius
   - Mehr Waffenangebote, Reroll, Extra-Waffenslot
   - Charakter-Freischaltungen
 
+- **Vollständiges HUD**
+  - HP-Balken, EXP-Balken, Waffen-Slots, Boss-HP-Balken (mit Schild-Anzeige)
+  - Runde/Welle-Anzeige, Kristall/Seelenkristall-Zähler
+  - Run-Ende-Screen mit Statistiken (Welle, Kills, Spielzeit, Seelenkristalle)
+
 ## Technik
 
 - **Vanilla JS** (keine Frameworks, keine Abhängigkeiten)
 - HTML5 Canvas Rendering
-- SVG Sprites (16 handgefertigte Assets)
+- SVG Sprites (18 handgefertigte Assets)
 - Delta-Time Game Loop
 - localStorage Persistenz (Run-Save + Meta-Progression)
 
@@ -70,9 +85,9 @@ Oder einfach `index.html` im Browser öffnen.
 ✅ Block 4 — Charakter-Auswahl (4 Charaktere)
 ✅ Block 5 — EXP-System & Waffen-Auswahl
 ✅ Block 6 — Persistenter Meta-Skilltree
-⬜ Block 7 — Spielmodi (Endlos, Zeitangriff, Herausforderungen)
-⬜ Block 8 — Zweite Map (Verdorbener Wald)
-⬜ Block 9 — UI & HUD Erweiterungen
+✅ Block 7 — Spielmodi (Endlos, Zeitangriff, Herausforderungen)
+✅ Block 8 — Zweite Map (Verdorbener Wald)
+✅ Block 9 — UI & HUD Erweiterungen
 ⬜ Block 10 — Speicher-Erweiterung
 ```
 

@@ -1258,7 +1258,8 @@ class Game {
 
     this.currency=0;
     this.totalKills=0;
-    this.wave=0;          // current wave index (0-based)
+    this.wave=0;
+    this.playTime=0;          // current wave index (0-based)
     this.waveActive=false;
     this.waveTimer=0;
     this.spawnQueue=[];   // [{type,delay,remaining}]
@@ -1269,6 +1270,8 @@ class Game {
 
     this.skills={};       // skill_id -> level
     SKILLS.forEach(s=>{ this.skills[s.id]=0; });
+
+    this.meta={soulGems:0, metaLevels:{}, unlocked:['aether']};
 
     this.announceTimer=0;
     this.bgCanvas=null;
@@ -1325,6 +1328,13 @@ class Game {
       this.renderChallengeDetail();
     });
     document.getElementById('meta-back').addEventListener('click',()=>this.hideMetaTree());
+    document.getElementById('menu-btn-gameover').addEventListener('click',()=>this.goToMenu());
+    document.getElementById('continue-endless-btn').addEventListener('click',()=>this._continueEndless());
+    document.getElementById('skilltree-reroll-btn').addEventListener('click',()=>{
+      this._rerollAvailable=false;
+      this.renderSkillCards();
+      document.getElementById('skilltree-reroll').style.display='none';
+    });
 
     // Continue button — only show if save exists
     const contBtn=document.getElementById('continue-btn');
@@ -1407,6 +1417,7 @@ class Game {
     if (fromSave) {
       this.loadMeta();
     } else {
+      this.playTime=0;
       this.currency=0;
       this.totalKills=0;
       this.wave=0;
@@ -1478,26 +1489,83 @@ class Game {
 
   _timeAttackVictory() {
     this.state='gameover';
+    document.getElementById('boss-hp-panel').classList.remove('show');
     const go=document.getElementById('gameover-screen');
     go.querySelector('h1').textContent='🏆 VICTORY!';
     go.querySelector('h1').style.color='#ffdd44';
     go.querySelector('#go-wave').textContent='15:00 überlebt!';
     go.querySelector('#go-kills').textContent=this.totalKills;
     go.querySelector('#go-currency').textContent=this.currency;
+    go.querySelector('#go-time').textContent=this._formatPlayTime();
     go.classList.add('show');
+    document.getElementById('continue-endless-btn').style.display='';
+    document.getElementById('menu-btn-gameover').style.display='';
     const earned=Math.floor(this.totalKills*1.0 + this.wave*10 + this.player.maxHp/5);
     this.saveMeta(earned);
     document.getElementById('go-souls').textContent=earned;
+    this._clearRunSave();
   }
 
   restart() {
     document.getElementById('gameover-screen').classList.remove('show');
+    document.getElementById('boss-hp-panel').classList.remove('show');
+    document.getElementById('continue-endless-btn').style.display='none';
     const goH1=document.getElementById('gameover-screen').querySelector('h1');
     goH1.textContent='☠ GAME OVER';
     goH1.style.color='#ff3333';
     this.challengeMods=[];
     this.bonusMultiplier=1.0;
     this.startGame(false);
+  }
+
+  goToMenu() {
+    document.getElementById('gameover-screen').classList.remove('show');
+    document.getElementById('boss-hp-panel').classList.remove('show');
+    document.getElementById('continue-endless-btn').style.display='none';
+    this.challengeMods=[];
+    this.bonusMultiplier=1.0;
+    this.playTime=0;
+    this.state='menu';
+    this.pickups=[];
+    this.enemies=[];
+    this.projectiles=[];
+    this.enemyProjectiles=[];
+    this.tentacles=[];
+    this.treeStumps=[];
+    this.mushrooms=[];
+    document.getElementById('menu-screen').classList.remove('hide');
+    // Update continue button
+    const contBtn=document.getElementById('continue-btn');
+    if (this.hasSave()) {
+      contBtn.style.display='';
+      const raw=JSON.parse(localStorage.getItem('aethermancer_save'));
+      contBtn.textContent=`FORTSETZEN  (Welle ${raw.wave||1})`;
+    } else {
+      contBtn.style.display='none';
+    }
+  }
+
+  _continueEndless() {
+    document.getElementById('gameover-screen').classList.remove('show');
+    document.getElementById('continue-endless-btn').style.display='none';
+    // Switch to endless mode and continue from current wave
+    this.gameMode='endless';
+    this.selectedMode='endless';
+    this.state='playing';
+    this.beginWave(this.wave);
+  }
+
+  _clearRunSave() {
+    localStorage.removeItem('aethermancer_save');
+    const contBtn=document.getElementById('continue-btn');
+    contBtn.style.display='none';
+  }
+
+  _formatPlayTime() {
+    const totalSec=Math.floor(this.playTime);
+    const m=Math.floor(totalSec/60);
+    const s=totalSec%60;
+    return `${m}:${String(s).padStart(2,'0')}`;
   }
 
   togglePause() {
@@ -1508,11 +1576,17 @@ class Game {
   gameOver() {
     this.state='gameover';
     const go=document.getElementById('gameover-screen');
+    document.getElementById('boss-hp-panel').classList.remove('show');
+
+    // Reset title
+    go.querySelector('h1').textContent='☠ GAME OVER';
+    go.querySelector('h1').style.color='#ff3333';
+    document.getElementById('continue-endless-btn').style.display='none';
+    document.getElementById('menu-btn-gameover').style.display='';
 
     // Mode-specific wave display
     if (this.gameMode==='endless') {
       go.querySelector('#go-wave').textContent=`Welle ${this.wave}`;
-      // Save highscore
       this._saveEndlessHighscore();
     } else if (this.gameMode==='timeattack') {
       const survived=900-this.timeAttackTimer;
@@ -1525,9 +1599,9 @@ class Game {
 
     go.querySelector('#go-kills').textContent=this.totalKills;
     go.querySelector('#go-currency').textContent=this.currency;
+    go.querySelector('#go-time').textContent=this._formatPlayTime();
     go.classList.add('show');
 
-    // Calculate earned soul gems
     let earned=Math.floor(this.totalKills*0.5 + this.wave*5 + this.player.maxHp/10);
     if (this.gameMode==='challenge') earned=Math.floor(earned*this.bonusMultiplier);
     this.saveMeta(earned);
@@ -1599,6 +1673,9 @@ class Game {
     this.enemiesThisWave=0;
     this.enemiesKilledThisWave=0;
     this.spawnQueue=[];
+
+    // Reset reroll for this wave
+    if (this.meta&&this.meta.metaLevels['meta_reroll']>0) this._rerollAvailable=true;
 
     // Build spawn queue
     const enemyMul=(this.gameMode==='challenge'&&this._challengeDoubleEnemies)?2:1;
@@ -1843,15 +1920,44 @@ class Game {
     document.getElementById('skilltree-currency').textContent=`Deine Kristalle: ${this.currency} ◆`;
     this.renderSkillCards();
     overlay.classList.add('show');
+    // Show reroll button if meta_reroll is active
+    if (this.meta.metaLevels['meta_reroll']>0 && this._rerollAvailable) {
+      document.getElementById('skilltree-reroll').style.display='';
+    }
   }
 
   hideSkillTree() {
     clearTimeout(this._waveTimeout);
     document.getElementById('skilltree-overlay').classList.remove('show');
+    document.getElementById('skilltree-reroll').style.display='none';
+    // Check for standard mode victory (100 waves completed)
+    if (this.gameMode==='standard' && this.wave >= 100) {
+      this._standardVictory();
+      return;
+    }
     this.state='playing';
     this.autoSave();
-    this.saveMeta(0); // Persist meta state (no new gems mid-run)
-    this.beginWave(this.wave); // advance to next wave
+    this.saveMeta(0);
+    this.beginWave(this.wave);
+  }
+
+  _standardVictory() {
+    this.state='gameover';
+    document.getElementById('boss-hp-panel').classList.remove('show');
+    const go=document.getElementById('gameover-screen');
+    go.querySelector('h1').textContent='🏆 SIEG!';
+    go.querySelector('h1').style.color='#ffdd44';
+    go.querySelector('#go-wave').textContent=`Runde 10 · Welle 10 (alle 100 Wellen!)`;
+    go.querySelector('#go-kills').textContent=this.totalKills;
+    go.querySelector('#go-currency').textContent=this.currency;
+    go.querySelector('#go-time').textContent=this._formatPlayTime();
+    go.classList.add('show');
+    const earned=Math.floor(this.totalKills*1.0 + 100*10 + this.player.maxHp/5);
+    this.saveMeta(earned);
+    document.getElementById('go-souls').textContent=earned;
+    document.getElementById('continue-endless-btn').style.display='';
+    document.getElementById('menu-btn-gameover').style.display='';
+    this._clearRunSave();
   }
 
   // ── Character Selection ─────────────────────────
@@ -2660,11 +2766,13 @@ class Game {
 
     if (this.state==='playing') this.update(dt);
     this.render();
+    this.updateBossHPBar();
     requestAnimationFrame(t=>this.loop(t));
   }
 
   update(dt) {
     const p=this.player;
+    this.playTime+=dt;
 
     p.update(dt, this.keys, this.enemies);
 
@@ -3235,6 +3343,49 @@ class Game {
       slot.innerHTML=`${cfg.icon}<span class="wslv">${w.level}</span>`;
       container.appendChild(slot);
     }
+  }
+
+  updateBossHPBar() {
+    if (this.state==='menu'||this.state==='gameover') return;
+    const panel=document.getElementById('boss-hp-panel');
+    if (!panel) return;
+    // Find active boss (BossEnemy, LichkoningEnemy, KrakenEnemy)
+    let boss=null;
+    for (const e of this.enemies) {
+      if (e.isBoss||e instanceof LichkoningEnemy||e instanceof KrakenEnemy) {
+        boss=e; break;
+      }
+    }
+    if (!boss||boss.dead()) {
+      panel.classList.remove('show');
+      return;
+    }
+    panel.classList.add('show');
+    // Boss name
+    const nameEl=document.getElementById('boss-name');
+    if (boss instanceof LichkoningEnemy) nameEl.textContent='LICHKÖNIG';
+    else if (boss instanceof KrakenEnemy) nameEl.textContent='CHAOSKRAKEN';
+    else nameEl.textContent='SCHATTENBOSS';
+    // HP bar
+    const hpPct=clamp(boss.hp/boss.maxHp*100,0,100);
+    document.getElementById('boss-hp-bar').style.width=hpPct+'%';
+    // Shield bar (Lichkönig)
+    const shieldBar=document.getElementById('boss-shield-bar');
+    if (boss.shieldMax!==undefined && boss.shield>0) {
+      const shieldPct=clamp(boss.shield/boss.shieldMax*100,0,100);
+      shieldBar.style.width=shieldPct+'%';
+      shieldBar.style.display='';
+    } else {
+      shieldBar.style.display='none';
+    }
+    // Text
+    const textEl=document.getElementById('boss-hp-text');
+    let txt=`${Math.ceil(boss.hp)} / ${boss.maxHp}`;
+    if (boss.shieldMax!==undefined && boss.shield>0) {
+      txt+=`  |  Schild: ${Math.ceil(boss.shield)}`;
+    }
+    if (boss.phase) txt+=`  |  Phase ${boss.phase}`;
+    textEl.textContent=txt;
   }
 
   updateHPBar() {
