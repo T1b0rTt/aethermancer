@@ -2380,12 +2380,21 @@ class Game {
   saveMeta(earnedGems=0) {
     const key='aethermancer_meta';
     let data=this._loadMetaRaw();
-    data.soulGems=(this.soulGems||0)+earnedGems;
-    if (this.meta) this.meta.soulGems=data.soulGems;
+    // Sync in-memory meta state to disk
+    if (this.meta) {
+      data.metaLevels={...this.meta.metaLevels};
+      data.unlocked=[...(this.meta.unlocked||['aether'])];
+      this.meta.soulGems=(this.meta.soulGems||0)+earnedGems;
+      data.soulGems=this.meta.soulGems;
+    } else {
+      data.soulGems=(this.soulGems||0)+earnedGems;
+    }
+    if (!data.metaLevels||Object.keys(data.metaLevels).length===0) {
+      data.metaLevels={}; META_SKILLS.forEach(s=>{ data.metaLevels[s.id]=0; });
+    }
+    if (!data.unlocked||data.unlocked.length===0) data.unlocked=['aether'];
     data.lastWave=this.wave;
     data.lastKills=this.totalKills;
-    if (!data.metaLevels) { data.metaLevels={}; META_SKILLS.forEach(s=>{ data.metaLevels[s.id]=0; }); }
-    if (!data.unlocked) data.unlocked=['aether'];
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch(e) {}
