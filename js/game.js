@@ -154,6 +154,30 @@ const WEAPONS = [
 ];
 
 // ═══════════════════════════════════════════════════
+//  GAME MODES
+// ═══════════════════════════════════════════════════
+const GAME_MODES = [
+  { id:'standard', name:'Standard', icon:'⚔️', desc:'10 Runden × 10 Wellen mit Boss-Rotation.' },
+  { id:'endless', name:'Endlosmodus', icon:'🌀', desc:'Unendliche Wellen, dynamische Spawns, Highscore.' },
+  { id:'timeattack', name:'Zeitangriff', icon:'⏱️', desc:'15 Minuten überleben. Countdown-Timer, kontinuierlicher Spawn.' },
+  { id:'challenge', name:'Herausforderung', icon:'💀', desc:'1-3 zufällige Modifikatoren. Bonus-Kristall-Multiplikator.' },
+];
+
+// ═══════════════════════════════════════════════════
+//  CHALLENGE MODIFIERS
+// ═══════════════════════════════════════════════════
+const CHALLENGE_MODS = [
+  { id:'no_regen', name:'Kein Regen', desc:'Kein Lifesteal / keine Regeneration.', bonus:0.3 },
+  { id:'half_hp', name:'Zerbrechlich', desc:'Halbe HP, +50% Schaden.', bonus:0.4, hpMul:0.5, dmgMul:1.5 },
+  { id:'double_enemies', name:'Überzahl', desc:'Doppelte Feinde, halbe Feind-HP.', bonus:0.4, enemyCountMul:2, enemyHpMul:0.5 },
+  { id:'wave_timer', name:'Zeitdruck', desc:'90s Wellen-Timer (sonst Game Over).', bonus:0.5 },
+  { id:'permadeath', name:'Permadeath', desc:'Kein Speichern möglich.', bonus:0.2 },
+  { id:'no_levelup', name:'Kein Aufstieg', desc:'Kein Skilltree / Level-Up.', bonus:0.6 },
+  { id:'fast_enemies', name:'Raserei', desc:'Feinde 50% schneller.', bonus:0.3, enemySpeedMul:1.5 },
+  { id:'one_weapon', name:'Einzelkampf', desc:'Maximal 1 Waffe.', bonus:0.5 },
+];
+
+// ═══════════════════════════════════════════════════
 //  META SKILLS (persistent progression)
 // ═══════════════════════════════════════════════════
 const META_SKILLS = [
@@ -1225,7 +1249,12 @@ class Game {
     document.getElementById('skilltree-save').addEventListener('click',()=>this.save());
     document.getElementById('charselect-back').addEventListener('click',()=>this.hideCharSelect());
     document.getElementById('weaponselect-skip').addEventListener('click',()=>this.hideWeaponSelect());
-    document.getElementById('upgrades-btn').addEventListener('click',()=>this.showMetaTree());
+        document.getElementById('upgrades-btn').addEventListener('click',()=>this.showMetaTree());
+    document.getElementById('modeselect-back').addEventListener('click',()=>this.hideModeSelect());
+    document.getElementById('challenge-reroll').addEventListener('click',()=>{
+      this._rolledChallengeMods=this._rollChallengeMods();
+      this.renderChallengeDetail();
+    });
     document.getElementById('meta-back').addEventListener('click',()=>this.hideMetaTree());
 
     // Continue button — only show if save exists
@@ -1240,6 +1269,12 @@ class Game {
     });
 
     this.selectedChar='aether'; // default character
+    this.selectedMode='standard';
+    this.gameMode='standard';
+    this.challengeMods=[];
+    this.bonusMultiplier=1.0;
+    this.timeAttackTimer=900; // 15 min
+    this.endlessWave=0;
 
     requestAnimationFrame(t=>this.loop(t));
   }
@@ -1289,14 +1324,30 @@ class Game {
   startGame(fromSave=false) {
     document.getElementById('menu-screen').classList.add('hide');
     document.getElementById('charselect-overlay').classList.remove('show');
+    document.getElementById('modeselect-overlay').classList.remove('show');
+
+    // Set mode from selection
     if (!fromSave) {
+      this.gameMode=this.selectedMode||'standard';
+    }
+
+    if (fromSave) {
+      this.loadMeta();
+    } else {
       this.currency=0;
       this.totalKills=0;
       this.wave=0;
+      this.endlessWave=0;
+      this.timeAttackTimer=900;
       SKILLS.forEach(s=>{ this.skills[s.id]=0; });
       this.loadMeta();
-    } else {
-      this.loadMeta();
+      // Challenge mode: apply stored modifiers
+      if (this.gameMode==='challenge' && !this.challengeMods.length) {
+        this.challengeMods=this._rolledChallengeMods;
+        let totalBonus=0;
+        for (const m of this.challengeMods) totalBonus+=m.bonus;
+        this.bonusMultiplier=1+totalBonus;
+      }
     }
     this.player=new Player(WORLD/2, WORLD/2, this.selectedChar||'aether');
     this.applySkillsToPlayer();
@@ -1315,6 +1366,27 @@ class Game {
         this.player.activeWeapons.push({id:w.id, level:w.level, cdTimer:0});
       }
     }
+    // Restore mode-specific state from save
+    if (fromSave) {
+      this.gameMode=this._savedMode||'standard';
+      this.timeAttackTimer=this._savedTimeAttack||900;
+      this.bonusMultiplier=this._savedBonusMul||1.0;
+      // Rebuild challenge mods from IDs
+      if (this._savedChallengeMods&&this._savedChallengeMods.length) {
+        this.challengeMods=this._savedChallengeMods.map(id=>CHALLENGE_MODS.find(m=>m.id===id)).filter(Boolean);
+        this._challengeNoLevelup=this.challengeMods.some(m=>m.id==='no_levelup');
+        this._challengeFastEnemies=this.challengeMods.some(m=>m.id==='fast_enemies');
+        this._challengeDoubleEnemies=this.challengeMods.some(m=>m.id==='double_enemies');
+        this._challengePermadeath=this.challengeMods.some(m=>m.id==='permadeath');
+        if (this.challengeMods.some(m=>m.id==='wave_timer')) this._challengeWaveTimer=90;
+        if (this.challengeMods.some(m=>m.id==='one_weapon')) {
+          this.player.activeWeapons=[{id:'magic_shot',level:1,cdTimer:0}];
+        }
+        if (this.challengeMods.some(m=>m.id==='no_regen')) {
+          this.player.regen=0; this.player.lifesteal=0;
+        }
+      }
+    }
     this.enemies=[];
     this.projectiles=[];
     this.enemyProjectiles=[];
@@ -1326,8 +1398,27 @@ class Game {
     this.beginWave(this.wave);
   }
 
+  _timeAttackVictory() {
+    this.state='gameover';
+    const go=document.getElementById('gameover-screen');
+    go.querySelector('h1').textContent='🏆 VICTORY!';
+    go.querySelector('h1').style.color='#ffdd44';
+    go.querySelector('#go-wave').textContent='15:00 überlebt!';
+    go.querySelector('#go-kills').textContent=this.totalKills;
+    go.querySelector('#go-currency').textContent=this.currency;
+    go.classList.add('show');
+    const earned=Math.floor(this.totalKills*1.0 + this.wave*10 + this.player.maxHp/5);
+    this.saveMeta(earned);
+    document.getElementById('go-souls').textContent=earned;
+  }
+
   restart() {
     document.getElementById('gameover-screen').classList.remove('show');
+    const goH1=document.getElementById('gameover-screen').querySelector('h1');
+    goH1.textContent='☠ GAME OVER';
+    goH1.style.color='#ff3333';
+    this.challengeMods=[];
+    this.bonusMultiplier=1.0;
     this.startGame(false);
   }
 
@@ -1339,18 +1430,69 @@ class Game {
   gameOver() {
     this.state='gameover';
     const go=document.getElementById('gameover-screen');
-    go.querySelector('#go-wave').textContent=`Runde ${this.round} · Welle ${this.waveInRound}`;
+
+    // Mode-specific wave display
+    if (this.gameMode==='endless') {
+      go.querySelector('#go-wave').textContent=`Welle ${this.wave}`;
+      // Save highscore
+      this._saveEndlessHighscore();
+    } else if (this.gameMode==='timeattack') {
+      const survived=900-this.timeAttackTimer;
+      const m=Math.floor(survived/60);
+      const s=Math.floor(survived%60);
+      go.querySelector('#go-wave').textContent=`${m}:${String(s).padStart(2,'0')}`;
+    } else {
+      go.querySelector('#go-wave').textContent=`Runde ${this.round} · Welle ${this.waveInRound}`;
+    }
+
     go.querySelector('#go-kills').textContent=this.totalKills;
     go.querySelector('#go-currency').textContent=this.currency;
     go.classList.add('show');
-    // Calculate earned soul gems and save meta
-    const earned=Math.floor(this.totalKills*0.5 + this.wave*5 + this.player.maxHp/10);
+
+    // Calculate earned soul gems
+    let earned=Math.floor(this.totalKills*0.5 + this.wave*5 + this.player.maxHp/10);
+    if (this.gameMode==='challenge') earned=Math.floor(earned*this.bonusMultiplier);
     this.saveMeta(earned);
     document.getElementById('go-souls').textContent=earned;
   }
 
   // ── Wave Logic ────────────────────────────────
   beginWave(idx) {
+    // Mode-specific handling
+    if (this.gameMode==='timeattack') {
+      // Time attack: continuous spawn, no wave system
+      this.waveActive=true;
+      this.enemiesThisWave=0;
+      this.enemiesKilledThisWave=0;
+      this.spawnQueue=[];
+      this._timeAttackNextSpawn=0;
+      this._timeAttackSpawnRate=1.8; // seconds between spawns
+      this._timeAttackElapsed=0;
+      this._timeAttackWave=1; // difficulty level
+      this.wave=1;
+      this.round=1;
+      this.waveInRound=1;
+      this.updateHUD();
+      return;
+    }
+
+    if (this.gameMode==='endless') {
+      // Endless: dynamic wave generation
+      const scale=idx;
+      const wd=this._buildEndlessWave(idx, scale);
+      this.wave=idx+1;
+      this.round=idx+1;
+      this.waveInRound=idx+1;
+      this.waveActive=true;
+      this.enemiesThisWave=0;
+      this.enemiesKilledThisWave=0;
+      this.spawnQueue=[];
+      this._buildSpawnQueue(wd, scale);
+      this.showAnnouncement(`Welle ${idx+1}`, `Endlos — Schwierigkeit +${idx}`);
+      this.updateHUD();
+      return;
+    }
+
     // Runde basierend auf idx (jede 10. Welle ist Boss-Welle)
     const round=Math.floor(idx / 10); // 0-basierte Runde (0-9)
     const waveInRound=(idx % 10) + 1; // Welle 1-10 innerhalb der Runde
@@ -1381,9 +1523,11 @@ class Game {
     this.spawnQueue=[];
 
     // Build spawn queue
+    const enemyMul=(this.gameMode==='challenge'&&this._challengeDoubleEnemies)?2:1;
     for (const entry of wd.enemies) {
-      this.enemiesThisWave+=entry.n;
-      for (let i=0;i<entry.n;i++) {
+      const n=entry.n*enemyMul;
+      this.enemiesThisWave+=n;
+      for (let i=0;i<n;i++) {
         this.spawnQueue.push({
           type:entry.type,
           delay: entry.delay * (i===0?0.5:1),
@@ -1449,6 +1593,63 @@ class Game {
     };
   }
 
+  _buildEndlessWave(idx, scale) {
+    const s=scale;
+    const n=6+Math.floor(s*3)+Math.floor(idx*0.8);
+    const isBossWave=(idx>0 && idx%10===0);
+    const enemies=[{type:'zombie', n:n, delay:1.4}];
+    if (idx>=3) enemies.push({type:'bat', n:Math.floor(n*0.4)+s, delay:1.0});
+    if (idx>=5) enemies.push({type:'skeleton_mage', n:2+Math.floor(s*0.6), delay:2.0});
+    if (idx>=7) enemies.push({type:'slime', n:2+Math.floor(s*0.6), delay:2.5});
+    if (idx>=10) enemies.push({type:'ghost', n:1+Math.floor(s*0.5), delay:3.0});
+    if (idx>=15) enemies.push({type:'ogre', n:1+Math.floor(s*0.3), delay:4.5});
+    if (isBossWave) {
+      const bossType=['boss','lichkoning','kraken'][idx%3];
+      enemies.push({type:bossType, n:1, delay:6.0});
+    }
+    return {enemies, boss:isBossWave};
+  }
+
+  _buildSpawnQueue(wd, scale) {
+    for (const entry of wd.enemies) {
+      this.enemiesThisWave+=entry.n;
+      for (let i=0;i<entry.n;i++) {
+        this.spawnQueue.push({
+          type:entry.type,
+          delay:entry.delay*(i===0?0.5:1),
+          timer:entry.delay*i*(1+scale*0.06),
+          scale,
+        });
+      }
+    }
+    this.spawnQueue.sort((a,b)=>a.timer-b.timer);
+  }
+
+  _processTimeAttack(dt) {
+    this._timeAttackElapsed+=dt;
+    this._timeAttackSpawnRate=Math.max(0.25, 1.8-this._timeAttackElapsed/600); // faster spawns over time
+
+    // Difficulty increases every 60s
+    if (this._timeAttackElapsed>=this._timeAttackWave*60) {
+      this._timeAttackWave++;
+    }
+
+    this._timeAttackNextSpawn-=dt;
+    if (this._timeAttackNextSpawn<=0) {
+      this._timeAttackNextSpawn=this._timeAttackSpawnRate;
+      // Spawn based on difficulty
+      const scale=this._timeAttackWave-1;
+      const r=Math.random();
+      if (r<0.4) this.spawnEnemy('zombie', scale);
+      else if (r<0.6) this.spawnEnemy('bat', scale);
+      else if (r<0.75 && this._timeAttackWave>=3) this.spawnEnemy('skeleton_mage', scale);
+      else if (r<0.88 && this._timeAttackWave>=4) this.spawnEnemy('slime', scale);
+      else if (r<0.96 && this._timeAttackWave>=6) this.spawnEnemy('ghost', scale);
+      else if (this._timeAttackWave>=6) this.spawnEnemy('ogre', scale);
+      else this.spawnEnemy('zombie', scale);
+    }
+  }
+
   waveUpdate(dt) {
     // Process spawn queue
     for (const entry of this.spawnQueue) {
@@ -1466,6 +1667,7 @@ class Game {
   }
 
   spawnEnemy(type, scale) {
+    const enemyHpMul=(this.gameMode==='challenge'&&this._challengeDoubleEnemies)?0.5:1;
     // Spawn at random edge of screen (with margin)
     const margin=80;
     const cx=this.player.x, cy=this.player.y;
@@ -1489,10 +1691,32 @@ class Game {
       case 'lichkoning':     this.enemies.push(new LichkoningEnemy(x,y,scale));   break;
       case 'kraken':         this.enemies.push(new KrakenEnemy(x,y,scale));       break;
     }
+    // Apply challenge enemy HP modifier
+    if (enemyHpMul!==1 && this.enemies.length) {
+      const lastE=this.enemies[this.enemies.length-1];
+      lastE.maxHp=Math.floor(lastE.maxHp*enemyHpMul);
+      lastE.hp=lastE.maxHp;
+    }
+    // Apply fast enemy speed
+    if (this._challengeFastEnemies && this.enemies.length) {
+      const lastE=this.enemies[this.enemies.length-1];
+      if (lastE.speed) lastE.speed*=1.5;
+      if (lastE.baseSpeed) lastE.baseSpeed*=1.5;
+    }
   }
 
   waveComplete() {
     this.waveActive=false;
+
+    if (this._challengeNoLevelup) {
+      // No skill tree in challenge no_levelup mode, just go to next wave
+      this._waveTimeout=setTimeout(()=>{
+        if (this.state==='playing') this.beginWave(this.wave);
+      }, 400);
+      this.saveMeta(0);
+      return;
+    }
+
     this._waitingForSkillTree=true;
     clearTimeout(this._waveTimeout);
     this._waveTimeout=setTimeout(()=>{
@@ -1519,7 +1743,7 @@ class Game {
     this.pickups.push(new GemPickup(enemy.x, enemy.y, enemy.reward));
     this.showFloatText(enemy.x, enemy.y, `+${enemy.reward}◆`, '#00ccff');
     // EXP award and level-up check
-    if (enemy.expReward) {
+    if (enemy.expReward && !this._challengeNoLevelup) {
       const gained=this.player._awardExp(enemy.expReward);
       if (gained>0) {
         this._pendingLevelUps=(this._pendingLevelUps||0)+gained;
@@ -1601,8 +1825,8 @@ class Game {
         card.addEventListener('click', ()=>{
           this.selectedChar=c.id;
           this.renderCharCards();
-          // Auto-start game when character selected
-          setTimeout(()=>this.startGame(false), 300);
+          // Go to mode selection after character chosen
+          setTimeout(()=>this.showModeSelect(), 300);
         });
       } else {
         card.addEventListener('click', ()=>{
@@ -1610,7 +1834,7 @@ class Game {
             this._unlockChar(c.id);
             this.selectedChar=c.id;
             this.renderCharCards();
-            setTimeout(()=>this.startGame(false), 300);
+            setTimeout(()=>this.showModeSelect(), 300);
           }
         });
       }
@@ -1638,6 +1862,118 @@ class Game {
     if (!this.meta.unlocked.includes(charId)) this.meta.unlocked.push(charId);
     this.meta.soulGems=this.soulGems;
     this.saveMeta(0);
+  }
+
+  // ── Mode Selection ──────────────────────────────
+  showModeSelect() {
+    this.state='modeselect';
+    document.getElementById('charselect-overlay').classList.remove('show');
+    const overlay=document.getElementById('modeselect-overlay');
+    this._rolledChallengeMods=this._rollChallengeMods();
+    this.renderModeCards();
+    overlay.classList.add('show');
+  }
+
+  hideModeSelect() {
+    document.getElementById('modeselect-overlay').classList.remove('show');
+    document.getElementById('charselect-overlay').classList.add('show');
+    this.state='charselect';
+  }
+
+  renderModeCards() {
+    const container=document.getElementById('mode-cards');
+    if (!container) return;
+    container.innerHTML='';
+
+    for (const m of GAME_MODES) {
+      const card=document.createElement('div');
+      card.className='mode-card';
+      card.innerHTML=`
+        <div class="mode-icon">${m.icon}</div>
+        <div class="mode-name">${m.name}</div>
+        <div class="mode-desc">${m.desc}</div>
+      `;
+
+      card.addEventListener('click', ()=>{
+        this.gameMode=m.id;
+        if (m.id==='challenge') {
+          // Show challenge modifiers detail
+          this._rolledChallengeMods=this._rollChallengeMods();
+          this.renderChallengeDetail();
+        } else {
+          document.getElementById('modeselect-overlay').classList.remove('show');
+          this.selectedMode=m.id;
+          this.startGame(false);
+        }
+      });
+      container.appendChild(card);
+    }
+  }
+
+  renderChallengeDetail() {
+    const detail=document.getElementById('challenge-detail');
+    const modsList=document.getElementById('challenge-mods');
+    const rerollBtn=document.getElementById('challenge-reroll');
+    if (!detail||!modsList) return;
+    detail.style.display='block';
+    modsList.innerHTML='';
+
+    const mods=this._rolledChallengeMods;
+    let totalBonus=0;
+    for (const mod of mods) {
+      totalBonus+=mod.bonus;
+      const el=document.createElement('div');
+      el.className='challenge-mod';
+      el.innerHTML=`${mod.name} <span class="mod-bonus">+${Math.round(mod.bonus*100)}%</span>`;
+      modsList.appendChild(el);
+    }
+
+    // Show total bonus
+    const bonusEl=document.createElement('div');
+    bonusEl.className='challenge-mod';
+    bonusEl.style.borderColor='rgba(255,200,0,0.5)';
+    bonusEl.innerHTML=`Bonus-Multiplikator: <span class="mod-bonus">×${(1+totalBonus).toFixed(1)} Kristalle</span>`;
+    modsList.appendChild(bonusEl);
+
+    // Reroll button
+    if (rerollBtn) {
+      rerollBtn.onclick=()=>{
+        this._rolledChallengeMods=this._rollChallengeMods();
+        this.renderChallengeDetail();
+      };
+    }
+
+    // Start button
+    let startBtn=document.getElementById('challenge-start');
+    if (!startBtn) {
+      startBtn=document.createElement('button');
+      startBtn.id='challenge-start';
+      startBtn.textContent='⚔️ Start mit Modifikatoren';
+      startBtn.style.cssText='background:linear-gradient(135deg,#993300,#cc4400);border:none;color:#fff;'
+        +'font-size:15px;padding:8px 24px;border-radius:8px;cursor:pointer;margin-top:8px;letter-spacing:1px;transition:all 0.2s;';
+      startBtn.onmouseenter=()=>{startBtn.style.transform='scale(1.05)';};
+      startBtn.onmouseleave=()=>{startBtn.style.transform='scale(1.0)';};
+      detail.appendChild(startBtn);
+    }
+    startBtn.onclick=()=>{
+      this.challengeMods=this._rolledChallengeMods;
+      this.bonusMultiplier=1+totalBonus;
+      document.getElementById('modeselect-overlay').classList.remove('show');
+      this.selectedMode='challenge';
+      this.startGame(false);
+    };
+  }
+
+  _rollChallengeMods() {
+    // Pick 1-3 random mods
+    const count=1+Math.floor(Math.random()*3); // 1..3
+    const pool=[...CHALLENGE_MODS];
+    for (let i=pool.length-1;i>0;i--) {
+      const j=Math.floor(Math.random()*(i+1));
+      [pool[i],pool[j]]=[pool[j],pool[i]];
+    }
+    // Ensure no conflicting mods (e.g. no_levelup + one_weapon is ok, but permadeath + no_levelup too harsh = ok)
+    return pool.slice(0,Math.min(count, pool.length));
   }
 
   // ── Meta Upgrades Screen ────────────────────────
@@ -1891,9 +2227,31 @@ class Game {
     p.regen+=ml('meta_regen')*0.5;
     p.magnetRadius*=(1+ml('meta_magnet')*0.25);
     this.currency+=ml('meta_startgem')*15;
-    // meta_offers affects _pickWeaponOffer (checked there)
-    // meta_reroll flag for skill tree
-    // meta_weapslot expands max weapon slots
+
+    // Apply challenge modifiers
+    if (this.gameMode==='challenge') {
+      for (const mod of this.challengeMods) {
+        switch (mod.id) {
+          case 'no_regen':
+            p.regen=0; p.lifesteal=0; break;
+          case 'half_hp':
+            p.maxHp=Math.floor(p.maxHp*0.5); p.hp=p.maxHp; p.dmg=Math.floor(p.dmg*1.5); break;
+          case 'no_levelup':
+            this._challengeNoLevelup=true; break;
+          case 'one_weapon':
+            // Keep only magic_shot
+            p.activeWeapons=[{id:'magic_shot',level:1,cdTimer:0}]; break;
+          case 'fast_enemies':
+            this._challengeFastEnemies=true; break;
+          case 'double_enemies':
+            this._challengeDoubleEnemies=true; break;
+          case 'permadeath':
+            this._challengePermadeath=true; break;
+          case 'wave_timer':
+            this._challengeWaveTimer=90; break;
+        }
+      }
+    }
   }
 
   // ── Superpower ────────────────────────────────
@@ -1993,9 +2351,10 @@ class Game {
   // ── Save / Load ───────────────────────────────
   save() {
     if (!this.player) return;
+    if (this._challengePermadeath) return; // Permadeath modifier
     const p=this.player;
     const data={
-      v:3,
+      v:4,
       wave:this.wave,
       currency:this.currency,
       kills:this.totalKills,
@@ -2005,6 +2364,11 @@ class Game {
       level:p.level,
       exp:p.exp,
       weapons:p.activeWeapons.map(w=>({id:w.id,level:w.level})),
+      gameMode:this.gameMode,
+      timeAttackTimer:this.timeAttackTimer,
+      challengeMods:this.challengeMods.map(m=>m.id),
+      bonusMultiplier:this.bonusMultiplier,
+      endlessWave:this.endlessWave,
       ts:Date.now(),
     };
     try {
@@ -2044,6 +2408,20 @@ class Game {
     this.soulGems=data.soulGems||0;
   }
 
+  _saveEndlessHighscore() {
+    try {
+      const prev=parseInt(localStorage.getItem('aethermancer_endless_highscore')||'0');
+      if (this.wave>prev) {
+        localStorage.setItem('aethermancer_endless_highscore', String(this.wave));
+      }
+    } catch(e) {}
+  }
+
+  _loadEndlessHighscore() {
+    try { return parseInt(localStorage.getItem('aethermancer_endless_highscore')||'0'); }
+    catch(e) { return 0; }
+  }
+
   autoSave() {
     if (this.player) this.save();
   }
@@ -2057,8 +2435,8 @@ class Game {
     if (!raw) return false;
     try {
       const data=JSON.parse(raw);
-      // Accept v:1, v:2, and v:3 saves
-      if (data.v<1||data.v>3) return false;
+      // Accept v:1 through v:4 saves
+      if (data.v<1||data.v>4) return false;
       this.wave=data.wave||0;
       this.currency=data.currency||0;
       this.totalKills=data.kills||0;
@@ -2068,6 +2446,10 @@ class Game {
       this._savedLevel=data.level||1;
       this._savedExp=data.exp||0;
       this._savedWeapons=data.weapons||null;
+      this._savedMode=data.gameMode||'standard';
+      this._savedTimeAttack=data.timeAttackTimer||900;
+      this._savedChallengeMods=data.challengeMods||[];
+      this._savedBonusMul=data.bonusMultiplier||1.0;
       // fill in any missing skills added after save
       SKILLS.forEach(s=>{ if (this.skills[s.id]==null) this.skills[s.id]=0; });
       return true;
@@ -2096,6 +2478,19 @@ class Game {
     const p=this.player;
 
     p.update(dt, this.keys, this.enemies);
+
+    // Time Attack: countdown timer
+    if (this.gameMode==='timeattack') {
+      this.timeAttackTimer-=dt;
+      if (this.timeAttackTimer<=0) {
+        this.timeAttackTimer=0;
+        // Victory! Survived 15 minutes
+        this._timeAttackVictory();
+        return;
+      }
+      // Continuous spawn
+      this._processTimeAttack(dt);
+    }
 
     // Camera follows player
     this.camera.x=p.x - this.canvas.width/2;
@@ -2376,6 +2771,14 @@ class Game {
     }
 
     // Wave
+    // Challenge wave timer
+    if (this._challengeWaveTimer>0) {
+      this._challengeWaveTimer-=dt;
+      if (this._challengeWaveTimer<=0) {
+        this.player.hp=0; // kill player on timeout
+      }
+    }
+
     if (this.waveActive) this.waveUpdate(dt);
 
     // Announce timer
@@ -2549,8 +2952,19 @@ class Game {
 
   // ── UI helpers ────────────────────────────────
   updateHUD() {
-    document.getElementById('wave-number').textContent=`Runde ${this.round||1} · Welle ${this.waveInRound||this.wave}`;
-    document.getElementById('wave-sub').textContent='Töte alle Feinde!';
+    if (this.gameMode==='timeattack') {
+      const remaining=Math.max(0,this.timeAttackTimer);
+      const m=Math.floor(remaining/60);
+      const s=Math.floor(remaining%60);
+      document.getElementById('wave-number').textContent=`${m}:${String(s).padStart(2,'0')}`;
+      document.getElementById('wave-sub').textContent='Zeitangriff — Überlebe!';
+    } else if (this.gameMode==='endless') {
+      document.getElementById('wave-number').textContent=`Welle ${this.wave||1}`;
+      document.getElementById('wave-sub').textContent='Endlosmodus';
+    } else {
+      document.getElementById('wave-number').textContent=`Runde ${this.round||1} · Welle ${this.waveInRound||this.wave}`;
+      document.getElementById('wave-sub').textContent='Töte alle Feinde!';
+    }
     document.getElementById('currency-value').textContent=this.currency;
     document.getElementById('souls-value').textContent=this.soulGems||0;
     this.updateHPBar();
