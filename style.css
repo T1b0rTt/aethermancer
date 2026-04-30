@@ -182,14 +182,15 @@ body {
 
 #skill-cards {
   display: flex;
-  gap: 18px;
+  gap: 14px;
   justify-content: center;
   flex-shrink: 0;
-  /* max 3 cards, no wrapping needed */
+  flex-wrap: wrap;
+  max-width: 95vw;
 }
 
 .skill-card {
-  width: 220px;
+  width: 190px;
   background: linear-gradient(160deg, #0d0d22, #111133);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 14px;

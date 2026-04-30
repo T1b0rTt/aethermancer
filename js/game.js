@@ -28,18 +28,21 @@ function loadImg(src) {
 //  SKILL TREE DATA
 // ═══════════════════════════════════════════════════
 const SKILLS = [
-  { id:'dmg',     name:'Scharfe Klingen',   icon:'⚔️',  cat:'attack',   desc:'+30% Schaden pro Stufe.',              max:5, base:30,  cost:40  },
-  { id:'firerate',name:'Schnellfeuer',       icon:'🏹',  cat:'attack',   desc:'+25% Feuerrate pro Stufe.',            max:5, base:25,  cost:40  },
-  { id:'trishot', name:'Dreifachschuss',     icon:'🌀',  cat:'attack',   desc:'Feuert 3 Projektile gleichzeitig.',    max:1, base:100, cost:120 },
-  { id:'piercing',name:'Durchschlag',        icon:'💫',  cat:'attack',   desc:'Projektile durchdringen Feinde.',      max:1, base:100, cost:100 },
-  { id:'speed',   name:'Windläufer',         icon:'💨',  cat:'mobility', desc:'+25% Bewegungsgeschwindigkeit.',       max:4, base:25,  cost:35  },
-  { id:'magnet',  name:'Juwelen-Magnet',     icon:'🧲',  cat:'mobility', desc:'Vergrößert Aufnahmeradius für Gems.',  max:3, base:50,  cost:30  },
-  { id:'maxhp',   name:'Eiserner Wille',     icon:'❤️',  cat:'defense',  desc:'+40 Max HP pro Stufe.',                max:5, base:40,  cost:45  },
-  { id:'regen',   name:'Regeneration',       icon:'🌿',  cat:'defense',  desc:'+1.5 HP/s Lebensregeneration.',        max:3, base:1.5, cost:60  },
-  { id:'lifesteal',name:'Lebensraub',        icon:'🩸',  cat:'defense',  desc:'+8% Lifesteal pro Stufe.',             max:3, base:8,   cost:70  },
-  { id:'nova_dmg',name:'Arkane Nova',        icon:'✨',  cat:'power',    desc:'+50% Superkraft-Schaden.',             max:3, base:50,  cost:80  },
-  { id:'nova_cd', name:'Kühlung',            icon:'⏱️',  cat:'power',    desc:'-20% Superkraft-Cooldown.',            max:3, base:20,  cost:70  },
-  { id:'nova_size',name:'Nova-Radius',       icon:'🔮',  cat:'power',    desc:'+40% Superkraft-Radius.',              max:3, base:40,  cost:65  },
+  // Tier 1 (ab Welle 1) — Basic
+  { id:'speed',   name:'Windläufer',      icon:'💨', tier:1, desc:'+25% Bewegungsgeschwindigkeit.',  max:4, cost:35 },
+  { id:'maxhp',   name:'Eiserner Wille',  icon:'❤️', tier:1, desc:'+40 Max HP pro Stufe.',           max:5, cost:45 },
+  { id:'dmg',     name:'Scharfe Klingen', icon:'⚔️', tier:1, desc:'+30% Schaden pro Stufe.',          max:5, cost:40 },
+  { id:'firerate',name:'Schnellfeuer',    icon:'🏹', tier:1, desc:'+25% Feuerrate pro Stufe.',        max:5, cost:40 },
+  // Tier 2 (ab Welle 20) — Mittel
+  { id:'lifesteal',name:'Lebensraub',     icon:'🩸', tier:2, desc:'+8% Lifesteal pro Stufe.',        max:3, cost:70 },
+  { id:'magnet', name:'Juwelen-Magnet',   icon:'🧲', tier:2, desc:'+50% Pickup-Radius pro Stufe.',   max:3, cost:30 },
+  { id:'regen',  name:'Regeneration',     icon:'🌿', tier:2, desc:'+1.5 HP/s Lebensregeneration.',   max:3, cost:60 },
+  { id:'armor',  name:'Schutzschild',     icon:'🛡️', tier:2, desc:'+12% Schadensreduktion pro Stufe.', max:3, cost:55 },
+  // Tier 3 (ab Welle 40) — Power
+  { id:'extraproj',name:'Mehrfachschuss', icon:'🌀', tier:3, desc:'+1 zusätzliches Projektil pro Stufe.', max:2, cost:90 },
+  { id:'piercing', name:'Durchschlag',    icon:'💫', tier:3, desc:'Projektile durchdringen Feinde.',  max:1, cost:100 },
+  { id:'nova_dmg', name:'Arkane Nova',    icon:'✨', tier:3, desc:'+50% Superkraft-Schaden.',         max:3, cost:80 },
+  { id:'nova_cd',  name:'Kühlung',        icon:'⏱️', tier:3, desc:'-20% Superkraft-Cooldown.',       max:3, cost:70 },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -431,7 +434,14 @@ class Player {
 
     const shots=[];
     const baseAng=this.aimAngle||0;
-    const angles=this.trishot ? [baseAng-0.22, baseAng, baseAng+0.22] : [baseAng];
+    const extraProj=this.extraProj||0;
+    const totalProj=1+extraProj;
+    const angles=[];
+    const spread=0.2;
+    for (let i=0;i<totalProj;i++) {
+      const offset=(i-(totalProj-1)/2)*spread;
+      angles.push(baseAng+offset);
+    }
 
     for (const a of angles) {
       const proj=new Projectile(
@@ -447,12 +457,8 @@ class Player {
 
   takeDamage(dmg) {
     if (this.invulnTime>0) return;
-    // Warrior: 20% damage reduction, +20% more when under 30% HP
-    if (this.charId==='warrior') {
-      let reduction=0.20;
-      if (this.hp/this.maxHp<0.30) reduction+=0.20;
-      dmg*=(1-reduction);
-    }
+    // Apply armor + warrior passive (stacked in applySkillsToPlayer)
+    if (this.dmgReduction>0) dmg*=(1-this.dmgReduction);
     this.hp-=dmg;
     this.invulnTime=0.15;
   }
@@ -2460,13 +2466,16 @@ class Game {
 
   // Pick 3 random non-maxed skills for the wave-end offer
   _pickSkillOffer() {
-    const pool=SKILLS.filter(s=>this.skills[s.id]<s.max);
+    // Determine available tiers based on current wave
+    const maxTier=this.wave>=40?3:this.wave>=20?2:1;
+    const pool=SKILLS.filter(s=>this.skills[s.id]<s.max && s.tier<=maxTier);
     // shuffle
     for (let i=pool.length-1;i>0;i--) {
       const j=Math.floor(Math.random()*(i+1));
       [pool[i],pool[j]]=[pool[j],pool[i]];
     }
-    return pool.slice(0,3);
+    const extraOffers=(this.meta&&this.meta.metaLevels?this.meta.metaLevels['meta_offers']||0:0);
+    return pool.slice(0, 4+extraOffers);
   }
 
   renderSkillCards() {
@@ -2483,11 +2492,14 @@ class Game {
       const lv=this.skills[skill.id];
       const cost=skill.cost + lv*20;
       const canAfford=this.currency>=cost;
+      const tierLabel=skill.tier===1?'⬟ Basis':skill.tier===2?'⬡ Mittel':'⬢ Power';
+      const tierColor=skill.tier===1?'#88cc88':skill.tier===2?'#cccc44':'#cc88ff';
       const card=document.createElement('div');
       card.className='skill-card'+(!canAfford?' locked':'');
-      card.dataset.category=skill.cat;
+      card.style.borderTop=`3px solid ${tierColor}`;
       card.innerHTML=`
         <div class="skill-icon">${skill.icon}</div>
+        <div class="skill-tier" style="font-size:10px;color:${tierColor};margin-bottom:4px;letter-spacing:1px">${tierLabel}</div>
         <div class="skill-name">${skill.name}</div>
         <div class="skill-desc">${skill.desc}</div>
         <div class="skill-level">Stufe: <span>${lv} / ${skill.max}</span></div>
@@ -2499,11 +2511,16 @@ class Game {
           this.currency-=cost;
           this.applySkillsToPlayer();
           this.updateHUD();
-          this.hideSkillTree(); // close and continue after buying
+          this.hideSkillTree();
         });
       }
       container.appendChild(card);
     }
+    // Show unlocked tiers
+    document.getElementById('skilltree-subtitle').textContent=
+      this.wave>=40?'Tiers: ⬟ Basis · ⬡ Mittel · ⬢ Power  (+4-6 Karten)':
+      this.wave>=20?'Tiers: ⬟ Basis · ⬡ Mittel  (Tier 3 ab Welle 40)':
+      'Tier: ⬟ Basis  (Tier 2 ab Welle 20)';
   }
 
   applySkillsToPlayer() {
@@ -2522,8 +2539,11 @@ class Game {
     p.hp        = Math.min(p.hp, p.maxHp);
     p.regen     = (cfg.id==='nature'?2:0) + lv('regen')*1.5;
     p.lifesteal = lv('lifesteal')*0.08;
-    p.trishot   = lv('trishot')>0;
+    p.extraProj = lv('extraproj'); // additional projectiles
     p.piercing  = lv('piercing')>0;
+    p.dmgReduction = lv('armor')*0.12; // armor: 12% per level
+    // Warrior passive stacks
+    if (cfg.id==='warrior') p.dmgReduction+=0.20;
     p.magnetRadius = 40 + lv('magnet')*50;
     p.superpowerMaxCd = cfg.spCd * (1 - lv('nova_cd')*0.20);
   }
