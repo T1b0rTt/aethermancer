@@ -250,6 +250,19 @@ function spawnBlood(particles, x, y, n=12, color='#cc2200') {
   }
 }
 
+function spawnBossDeath(particles, x, y, color) {
+  // Large explosion ring
+  for (let i=0;i<50;i++) {
+    const a=rand(0,Math.PI*2), s=rand(60,350);
+    particles.push(new Particle(x,y, Math.cos(a)*s, Math.sin(a)*s-100, color, rand(3,8), rand(0.6,1.5)));
+  }
+  // Inner bright flash
+  for (let i=0;i<20;i++) {
+    const a=rand(0,Math.PI*2), s=rand(30,150);
+    particles.push(new Particle(x,y, Math.cos(a)*s, Math.sin(a)*s-40, '#ffffff', rand(1,3), rand(0.2,0.5)));
+  }
+}
+
 // Nova visual effect
 class NovaEffect {
   constructor(x,y,r) { this.x=x; this.y=y; this.maxR=r; this.r=0; this.life=0.5; this.maxLife=0.5; }
@@ -267,6 +280,98 @@ class NovaEffect {
   }
   dead() { return this.life<=0; }
 }
+
+// ═══════════════════════════════════════════════════
+//  SOUND MANAGER (Web Audio API — synthesized sounds)
+// ═══════════════════════════════════════════════════
+class SoundManager {
+  constructor() {
+    this.enabled=true;
+    this._muted=false;
+    this._ctx=null;
+    this._initOnInteraction=()=>{
+      if (!this._ctx) {
+        try { this._ctx=new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {}
+      }
+      if (this._ctx&&this._ctx.state==='suspended') this._ctx.resume();
+    };
+    if (typeof window!=='undefined') {
+      window.addEventListener('click',this._initOnInteraction,{once:true});
+      window.addEventListener('keydown',this._initOnInteraction,{once:true});
+    }
+  }
+  get muted() { return this._muted; }
+  set muted(v) { this._muted=v; }
+  _ctxEnsure() {
+    if (!this._ctx) {
+      try { this._ctx=new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {}
+    }
+    return this._ctx;
+  }
+  _play(freq,type,dur,vol=0.08,detune=0,freqEnd=0) {
+    if (this._muted||!this.enabled) return;
+    const ctx=this._ctxEnsure();
+    if (!ctx) return;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type=type;
+    osc.frequency.setValueAtTime(freq,ctx.currentTime);
+    if (freqEnd) osc.frequency.linearRampToValueAtTime(freqEnd,ctx.currentTime+dur);
+    if (detune) osc.detune.setValueAtTime(detune,ctx.currentTime);
+    gain.gain.setValueAtTime(vol,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+dur);
+  }
+  _noise(dur,vol=0.04) {
+    if (this._muted||!this.enabled) return;
+    const ctx=this._ctxEnsure();
+    if (!ctx) return;
+    const buf=ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate);
+    const data=buf.getChannelData(0);
+    for (let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*vol;
+    const src=ctx.createBufferSource();
+    src.buffer=buf;
+    const gain=ctx.createGain();
+    gain.gain.setValueAtTime(vol,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(ctx.currentTime);
+  }
+  shoot()     { this._play(800,'square',0.06,0.03); this._play(1200,'square',0.04,0.02, 50); }
+  hit()       { this._noise(0.05,0.03); this._play(200,'triangle',0.06,0.04,0,80); }
+  levelUp()   { this._play(523,'square',0.08,0.06); setTimeout(()=>this._play(659,'square',0.08,0.06),80); setTimeout(()=>this._play(784,'square',0.12,0.08),160); }
+  waveStart() { this._play(330,'triangle',0.15,0.06,0,440); }
+  bossDeath() { this._noise(0.3,0.08); this._play(80,'sawtooth',0.4,0.1,0,40); this._play(55,'triangle',0.5,0.08,0,30); }
+  playerDeath(){ this._play(200,'sawtooth',0.5,0.1,0,80); this._play(150,'triangle',0.7,0.06,0,60); }
+  superPower(){ this._play(440,'triangle',0.2,0.08,0,880); this._play(660,'square',0.15,0.05,0,1320); }
+  gemPickup() { this._play(1200,'sine',0.05,0.02,0,1600); }
+  bossSpawn() { this._play(60,'sawtooth',0.3,0.06,0,120); this._play(80,'triangle',0.25,0.05); }
+}
+
+// ═══════════════════════════════════════════════════
+//  ACHIEVEMENT DEFINITIONS
+// ═══════════════════════════════════════════════════
+const ACHIEVEMENTS = [
+  { id:'first_kill',    name:'Erstes Blut',      desc:'Töte deinen ersten Feind.',                     icon:'⚔️', goal:1 },
+  { id:'kill_100',      name:'Monstermetzger',    desc:'Töte 100 Feinde in einem Run.',                 icon:'💀', goal:100 },
+  { id:'kill_500',      name:'Armee-Vernichter',  desc:'Töte 500 Feinde in einem Run.',                 icon:'☠️', goal:500 },
+  { id:'kill_1000',     name:'Legende der Arena', desc:'Töte 1000 Feinde in einem Run.',                icon:'👑', goal:1000 },
+  { id:'wave_10',       name:'Anfänger',          desc:'Erreiche Welle 10.',                             icon:'🌊', goal:10 },
+  { id:'wave_30',       name:'Veteran',           desc:'Erreiche Welle 30.',                             icon:'⚡', goal:30 },
+  { id:'wave_50',       name:'Champion',          desc:'Erreiche Welle 50.',                             icon:'🏅', goal:50 },
+  { id:'wave_100',      name:'Aethermeister',     desc:'Besiege alle 100 Wellen (Sieg!).',               icon:'🏆', goal:100 },
+  { id:'first_boss',    name:'Boss-Bezwinger',    desc:'Besiege deinen ersten Boss.',                   icon:'🐉', goal:1 },
+  { id:'all_chars',     name:'Vollständiges Team',desc:'Schalte alle 4 Charaktere frei.',               icon:'👥', goal:4 },
+  { id:'endless_30',    name:'Endlos-Überlebender',desc:'Überlebe 30 Wellen im Endlos-Modus.',           icon:'♾️', goal:30 },
+  { id:'first_super',   name:'Macht der Magie',   desc:'Setze deine Superkraft ein.',                   icon:'✨', goal:1 },
+  { id:'highscore_5k',  name:'Kristallsammler',   desc:'Sammle 5000 Kristalle in einem Run.',           icon:'💎', goal:5000 },
+  { id:'full_weapons',  name:'Volles Arsenal',    desc:'Halte gleichzeitig 6 Waffen (max Slots).',      icon:'🔫', goal:6 },
+  { id:'time_10min',    name:'Zeitüberdauerer',   desc:'Überlebe 10 Minuten im Zeitangriff-Modus.',     icon:'⏳', goal:600 },
+];
 
 // ═══════════════════════════════════════════════════
 //  PROJECTILE
@@ -359,6 +464,7 @@ class Player {
 
     this.superpowerMaxCd=cfg.spCd;
     this.superpowerCd=0;
+    this.superUsed=false;
 
     // Shadow Runner: crit tracking
     this.shotCount=0;
@@ -421,6 +527,7 @@ class Player {
     if (this.shotCooldown>0) return null;
     if (!enemies.length) return null;
     this.shotCooldown=1/this.fireRate;
+    this._game.sound.shoot();
 
     // Shadow Runner: crit every 5th shot
     this.shotCount++;
@@ -1253,6 +1360,9 @@ class Game {
     this.enemies=[];
     this.projectiles=[];
     this.enemyProjectiles=[];
+    this.sound=new SoundManager();
+    this.achievements=this._loadAchievements();
+    this._pendingAch=null; // achievement pending for toast display
     this.effects=[];  // NovaEffect etc
     this.particles=[];
     this.pickups=[];
@@ -1344,6 +1454,18 @@ class Game {
     });
     document.getElementById('savemanager-close').addEventListener('click',()=>this.hideSaveManager());
     document.getElementById('saves-btn').addEventListener('click',()=>this.showSaveManager());
+
+    // Pause overlay buttons
+    document.getElementById('pause-resume').addEventListener('click',()=>this.togglePause());
+    document.getElementById('pause-save').addEventListener('click',()=>{ this.save(); this.togglePause(); });
+    document.getElementById('pause-quit').addEventListener('click',()=>{
+      document.getElementById('pause-overlay').classList.remove('show');
+      this.goToMenu();
+    });
+
+    // Achievement buttons
+    document.getElementById('achievements-btn').addEventListener('click',()=>this.showAchievements());
+    document.getElementById('ach-back').addEventListener('click',()=>this.hideAchievements());
 
     // Import drag & drop
     const dropZone=document.getElementById('import-drop-zone');
@@ -1463,6 +1585,7 @@ class Game {
       }
     }
     this.player=new Player(WORLD/2, WORLD/2, this.selectedChar||'aether');
+    this.player._game=this;
     this.applySkillsToPlayer();
     if (!fromSave) {
       this.applyMetaToPlayer();
@@ -1551,6 +1674,8 @@ class Game {
   goToMenu() {
     document.getElementById('gameover-screen').classList.remove('show');
     document.getElementById('boss-hp-panel').classList.remove('show');
+    document.getElementById('pause-overlay').classList.remove('show');
+    document.getElementById('achievements-overlay').classList.remove('show');
     document.getElementById('continue-endless-btn').style.display='none';
     this.challengeMods=[];
     this.bonusMultiplier=1.0;
@@ -1605,8 +1730,13 @@ class Game {
   }
 
   togglePause() {
-    if (this.state==='playing') this.state='paused';
-    else if (this.state==='paused') this.state='playing';
+    if (this.state==='playing') {
+      this.state='paused';
+      document.getElementById('pause-overlay').classList.add('show');
+    } else if (this.state==='paused') {
+      this.state='playing';
+      document.getElementById('pause-overlay').classList.remove('show');
+    }
   }
 
   gameOver() {
@@ -1735,6 +1865,8 @@ class Game {
     const fullLabel=wd.label.replace(/BOSS — /, `Runde ${this.round} · BOSS — `);
 
     this.showAnnouncement(fullLabel, bossLabel);
+    if (isBossWave) this.sound.bossSpawn();
+    else this.sound.waveStart();
     this.updateHUD();
   }
 
@@ -1942,11 +2074,25 @@ class Game {
     this.player.score+=enemy.score;
     this.pickups.push(new GemPickup(enemy.x, enemy.y, enemy.reward));
     this.showFloatText(enemy.x, enemy.y, `+${enemy.reward}◆`, '#00ccff');
+    // Boss death particles
+    const isBoss=enemy.isBoss||enemy instanceof LichkoningEnemy||enemy instanceof KrakenEnemy;
+    if (isBoss) {
+      let pColor='#aa00ff';
+      if (enemy instanceof LichkoningEnemy) pColor='#00ccff';
+      else if (enemy instanceof KrakenEnemy) pColor='#00ff88';
+      spawnBossDeath(this.particles, enemy.x, enemy.y, pColor);
+      this.effects.push(new NovaEffect(enemy.x, enemy.y, 160));
+      this._bossKillCount=(this._bossKillCount||0)+1;
+      if (this.sound) this.sound.bossDeath();
+    } else {
+      if (this.sound) this.sound.hit();
+    }
     // EXP award and level-up check
     if (enemy.expReward && !this._challengeNoLevelup) {
       const gained=this.player._awardExp(enemy.expReward);
       if (gained>0) {
         this._pendingLevelUps=(this._pendingLevelUps||0)+gained;
+        this.sound.levelUp();
         this.showFloatText(this.player.x, this.player.y-50, `⬆ LEVEL ${this.player.level}!`, '#ffdd44');
         this.showWeaponSelect();
       }
@@ -2595,6 +2741,8 @@ class Game {
     const p=this.player;
     const lv=id=>this.skills[id]||0;
 
+    p.superUsed=true;
+    this.sound.superPower();
     switch (p.charId) {
       case 'aether': this._spArcaneNova(lv); break;
       case 'shadow': this._spShadowClones(); break;
@@ -2693,6 +2841,94 @@ class Game {
     }
     this._natureVineTimer=6;
     this.showFloatText(p.x, p.y-40, '🌿 NATURGEWALT!', '#44ff44');
+  }
+
+  // ── Achievements ──────────────────────────────
+  _loadAchievements() {
+    try {
+      const raw=localStorage.getItem('aethermancer_achievements');
+      return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+  }
+  _saveAchievements() {
+    localStorage.setItem('aethermancer_achievements', JSON.stringify(this.achievements));
+  }
+  _unlockAch(id) {
+    if (this.achievements[id]) return;
+    this.achievements[id]=Date.now();
+    this._saveAchievements();
+    this._pendingAch=ACHIEVEMENTS.find(a=>a.id===id);
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    this._showAchToast();
+    if (this.sound) this.sound.levelUp();
+  }
+  _showAchToast() {
+    if (!this._pendingAch) return;
+    const toast=document.getElementById('ach-toast');
+    document.getElementById('ach-toast-name').textContent=this._pendingAch.name;
+    toast.classList.add('show');
+    this._toastTimer=setTimeout(()=>{
+      toast.classList.remove('show');
+      this._pendingAch=null;
+    }, 3500);
+  }
+  _checkAchievements() {
+    if (!this.player) return;
+    const p=this.player;
+    // Kill achievements
+    if (this.totalKills>=1) this._unlockAch('first_kill');
+    if (this.totalKills>=100) this._unlockAch('kill_100');
+    if (this.totalKills>=500) this._unlockAch('kill_500');
+    if (this.totalKills>=1000) this._unlockAch('kill_1000');
+    // Wave achievements
+    if (this.wave>=10) this._unlockAch('wave_10');
+    if (this.wave>=30) this._unlockAch('wave_30');
+    if (this.wave>=50) this._unlockAch('wave_50');
+    if (this.wave>=100) this._unlockAch('wave_100');
+    // Boss kills (tracked via boss kill counter)
+    if ((this._bossKillCount||0)>=1) this._unlockAch('first_boss');
+    // Characters unlocked
+    if (this.meta&&this.meta.unlocked) {
+      let chars=0;
+      for (const ch of CHARACTERS) { if (!ch.locked||this.meta.unlocked[ch.id]) chars++; }
+      if (chars>=4) this._unlockAch('all_chars');
+    }
+    // Endless wave 30
+    if (this.gameMode==='endless'&&this.wave>=30) this._unlockAch('endless_30');
+    // Superpower used
+    if (p.superUsed) this._unlockAch('first_super');
+    // Full weapon slots
+    if (p.activeWeapons&&p.activeWeapons.length>=6) this._unlockAch('full_weapons');
+    // Time attack 10 min
+    if (this.gameMode==='timeattack'&&this.timeAttackTimer!==undefined) {
+      const survived=900-this.timeAttackTimer;
+      if (survived>=600) this._unlockAch('time_10min');
+    }
+    // Currency achievement
+    if (this.currency>=5000) this._unlockAch('highscore_5k');
+  }
+  showAchievements() {
+    this.loadMeta();
+    const overlay=document.getElementById('achievements-overlay');
+    const list=document.getElementById('ach-list');
+    list.innerHTML='';
+    for (const a of ACHIEVEMENTS) {
+      const unlocked=!!this.achievements[a.id];
+      const card=document.createElement('div');
+      card.className='ach-card'+(unlocked?' unlocked':'');
+      let extra='';
+      if (!unlocked) {
+        if (a.goal>1) extra=`<div class="ach-progress">0 / ${a.goal}</div>`;
+      }
+      card.innerHTML=`<div class="ach-icon">${unlocked?a.icon:'🔒'}</div>
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>${extra}`;
+      list.appendChild(card);
+    }
+    overlay.classList.add('show');
+  }
+  hideAchievements() {
+    document.getElementById('achievements-overlay').classList.remove('show');
   }
 
   // ── Save / Load ───────────────────────────────
@@ -3340,6 +3576,7 @@ class Game {
     if (this.player.superpowerCd<=0) { sk.textContent='LEERTASTE — BEREIT!'; sk.classList.add('ready'); }
     else { sk.textContent=`Leertaste (${this.player.superpowerCd.toFixed(1)}s)`; sk.classList.remove('ready'); }
 
+    this._checkAchievements();
     this.updateHUD();
   }
 
@@ -3552,9 +3789,21 @@ class Game {
     for (const w of this.player.activeWeapons) {
       const cfg=this.player._getWeaponCfg(w.id);
       if (!cfg) continue;
+      const lv=w.level;
+      const dmg=cfg.baseDmg+cfg.scalingPerLv*(lv-1);
+      const cd=cfg.baseCd+cfg.cdPerLv*(lv-1);
+      let extra='';
+      if (cfg.cat==='orbital') extra=` | ${cfg.orbs+(cfg.scaling==='count'?cfg.scalingPerLv*(lv-1):0)} Kugeln`;
+      else if (cfg.id==='lightning') extra=` | ⚡`;
+      else if (cfg.id==='poison_gas') extra=` | ☠ AoE`;
+      if (cfg.slow) extra+=` | ❄ Slow`;
+      if (cfg.bounces) extra+=` | 💠 Bounce`;
+      if (this.player.piercing) extra+=` | 💫 Pierce`;
+      const tooltip=`${cfg.name} Lv.${lv}\n⚔ ${dmg} DMG | ⏱ ${cd.toFixed(2)}s${extra}`;
       const slot=document.createElement('div');
       slot.className='weapon-slot';
-      slot.innerHTML=`${cfg.icon}<span class="wslv">${w.level}</span>`;
+      slot.setAttribute('data-tooltip', tooltip);
+      slot.innerHTML=`${cfg.icon}<span class="wslv">${lv}</span>`;
       container.appendChild(slot);
     }
   }

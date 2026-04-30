@@ -85,6 +85,7 @@
     <button id="continue-btn" style="display:none">FORTSETZEN</button>
     <button id="upgrades-btn">⬆ UPGRADES</button>
     <button id="saves-btn">💾 SPIELSTÄNDE</button>
+    <button id="achievements-btn">🏆 ERFOLGE</button>
   </div>
   <div class="menu-controls">
     <span>Steuerung:</span><br>
@@ -169,6 +170,33 @@
 <!-- ─── Reroll indicator in skill tree ─────────── -->
 <div id="skilltree-reroll" style="display:none">
   <button id="skilltree-reroll-btn">🎲 REROLL</button>
+</div>
+
+<!-- ─── Pause Overlay ────────────────────────── -->
+<div id="pause-overlay">
+  <h2>⏸ PAUSE</h2>
+  <div id="pause-buttons">
+    <button id="pause-resume">FORTSETZEN [ESC]</button>
+    <button id="pause-save">💾 SPEICHERN [F5]</button>
+    <button id="pause-quit">HAUPTMENÜ</button>
+  </div>
+</div>
+
+<!-- ─── Achievement Toast ────────────────────── -->
+<div id="ach-toast">
+  <div id="ach-toast-icon">🏆</div>
+  <div id="ach-toast-text">
+    <div id="ach-toast-title">Erfolg freigeschaltet!</div>
+    <div id="ach-toast-name"></div>
+  </div>
+</div>
+
+<!-- ─── Achievements Overlay ─────────────────── -->
+<div id="achievements-overlay">
+  <h2>🏆 ERFOLGE</h2>
+  <div id="ach-subtitle">Deine freigeschalteten Erfolge</div>
+  <div id="ach-list"></div>
+  <button id="ach-back">Zurück zum Menü</button>
 </div>
 
 <!-- ─── Save Manager Overlay ───────────────────── -->

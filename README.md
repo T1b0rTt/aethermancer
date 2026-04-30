@@ -1,6 +1,6 @@
 # Aethermancer
 
-![Version](https://img.shields.io/badge/version-1.1-blue)
+![Version](https://img.shields.io/badge/version-1.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
 ![JS](https://img.shields.io/badge/vanilla-JS-yellow)
@@ -64,9 +64,14 @@ Oder einfach `index.html` im Browser öffnen.
   - Charakter-Freischaltungen
 
 - **Vollständiges HUD**
-  - HP-Balken, EXP-Balken, Waffen-Slots, Boss-HP-Balken (mit Schild-Anzeige)
+  - HP-Balken, EXP-Balken, Waffen-Slots mit Tooltips, Boss-HP-Balken (mit Schild-Anzeige)
   - Runde/Welle-Anzeige, Kristall/Seelenkristall-Zähler
   - Run-Ende-Screen mit Statistiken (Welle, Kills, Spielzeit, Seelenkristalle)
+  - Pause-Menü mit Fortsetzen, Speichern und Aufgeben
+
+- **15 Achievements** mit Toast-Benachrichtigungen und Übersicht
+
+- **Sound-Effekte** via Web Audio API (Schuss, Treffer, Level-Up, Wellen, Bosse, Superkraft)
 
 ## Technik
 
@@ -94,14 +99,22 @@ Oder einfach `index.html` im Browser öffnen.
 
 **Alle 10 Blöcke abgeschlossen!**
 
-## Updates (v1.1)
+## Updates (v1.2)
 
 ```
 ✅ Block 11 — Speicherplatz-System (3 Slots, JSON Export/Import, Drag&Drop, Löschen)
 ✅ Block 12 — Balancing (Seelenkristalle, EXP, Waffen, Feinde)
 ✅ Block 13 — Skilltree-Tiers (3 Stufen, mehr Auswahl)
-⬜ Block 14 — Weitere Verbesserungen
+✅ Block 14 — Weitere Verbesserungen
 ```
+
+## Updates (v1.2) — Neue Features
+
+- **Tooltips** — Waffen-Slots zeigen bei Hover Stats (Schaden, Cooldown, Spezial-Effekte)
+- **Pause-Menü** — Vollwertiges Pause-Menü mit Fortsetzen, Speichern und Aufgeben
+- **Sound-Effekte** — Synthetisierte Sounds via Web Audio API (Schuss, Treffer, Level-Up, Boss, etc.)
+- **Partikeleffekte** — Spektakuläre Explosionen bei Boss-Toden mit typ-spezifischen Farben
+- **Achievement-System** — 15 Erfolge mit Toast-Benachrichtigung und Übersicht im Hauptmenü
 
 ## Projektstruktur
 
@@ -110,7 +123,7 @@ Oder einfach `index.html` im Browser öffnen.
 ├── index.html      # Einstiegspunkt + DOM-Overlays
 ├── style.css       # HUD, Menüs, Overlays
 ├── js/
-│   └── game.js     # Gesamte Spiellogik (~3500 Zeilen)
+│   └── game.js     # Gesamte Spiellogik (~4000 Zeilen)
 └── svg/
     ├── player.svg
     ├── shadow_runner.svg, warrior.svg, nature_guardian.svg
